@@ -6,21 +6,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type info struct {
-	Name  *string    `yaml:"name"`
-	Names *[2]string `yaml:"names"`
-	Type  eventType  `yaml:"type"`
-}
-
-var _ fmt.Stringer = info{}
-
-func (i info) String() string {
-	if name := i.Name; name != nil {
-		return fmt.Sprintf("%s ma dziś %s!", *name, i.Type)
-	}
-	return fmt.Sprintf("%s i %s mają dziś %s!", i.Names[0], i.Names[1], i.Type)
-}
-
 const (
 	birthday eventType = "birthday"
 	nameday  eventType = "nameday"
@@ -31,8 +16,16 @@ type eventType string
 
 var _ fmt.Stringer = eventType("")
 
-func (e eventType) String() string {
-	switch e {
+type event struct {
+	Name  *string    `yaml:"name"`
+	Names *[2]string `yaml:"names"`
+	Type  eventType  `yaml:"type"`
+}
+
+var _ fmt.Stringer = event{}
+
+func (et eventType) String() string {
+	switch et {
 	case birthday:
 		return "urodziny"
 	case nameday:
@@ -44,12 +37,19 @@ func (e eventType) String() string {
 	}
 }
 
-func (e *eventType) UnmarshalYAML(value *yaml.Node) error {
+func (et *eventType) UnmarshalYAML(value *yaml.Node) error {
 	switch v := eventType(value.Value); v {
 	case birthday, nameday, wedding:
-		*e = v
+		*et = v
 	default:
 		return fmt.Errorf("invalid type: %s", value.Value)
 	}
 	return nil
+}
+
+func (e event) String() string {
+	if name := e.Name; name != nil {
+		return fmt.Sprintf("%s ma dziś %s!", *name, e.Type)
+	}
+	return fmt.Sprintf("%s i %s mają dziś %s!", e.Names[0], e.Names[1], e.Type)
 }

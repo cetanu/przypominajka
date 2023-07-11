@@ -11,7 +11,7 @@ func main() {
 	var token string
 	flag.StringVar(&token, "token", "", "Telegram bot token")
 	var chatID int64
-	flag.Int64Var(&chatID, "chat-id", 87974246, "Telegram chat ID")
+	flag.Int64Var(&chatID, "chat-id", 0, "Telegram chat ID")
 	flag.Parse()
 
 	bot, err := newBot(token, chatID)
@@ -20,7 +20,7 @@ func main() {
 	}
 	go bot.listen()
 
-	bdays, err := readBirthdays()
+	events, err := readEvents()
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -29,6 +29,6 @@ func main() {
 		if t.Round(time.Hour).Hour() != 9 { // run once a day between 8:30 and 9:29
 			continue
 		}
-		bot.notify(bdays.at(t)...)
+		bot.send(events.today()...)
 	}
 }
