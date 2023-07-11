@@ -2,7 +2,6 @@ package main
 
 import (
 	_ "embed"
-	"fmt"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -14,30 +13,7 @@ var bdayBytes []byte
 type (
 	birthdays map[time.Month]month
 	month     map[int][]info
-	info      struct {
-		Name string    `yaml:"name"`
-		Type eventType `yaml:"type"`
-	}
 )
-
-const (
-	birthday eventType = "birthday"
-	nameday  eventType = "nameday"
-)
-
-type eventType string
-
-func (e *eventType) UnmarshalYAML(value *yaml.Node) error {
-	switch value.Value {
-	case "birthday", "urodziny":
-		*e = birthday
-	case "nameday", "imieniny":
-		*e = nameday
-	default:
-		return fmt.Errorf("invalid type: %s", value.Value)
-	}
-	return nil
-}
 
 func (b birthdays) at(t time.Time) []info {
 	return b[t.Month()][t.Day()]
