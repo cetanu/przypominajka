@@ -1,4 +1,4 @@
-module git.sr.ht/~tymek/urodzinki
+module git.sr.ht/~tymek/przypominajka
 
 go 1.20
 
