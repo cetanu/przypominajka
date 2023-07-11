@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"log"
-	"sync"
+	"time"
 )
 
 func main() {
@@ -14,20 +14,21 @@ func main() {
 	flag.Int64Var(&chatID, "chat-id", 87974246, "Telegram chat ID")
 	flag.Parse()
 
-	bdays, err := readBirthdays()
-	if err != nil {
-		log.Fatalln(err)
-	}
-	log.Println(bdays)
-
 	bot, err := newBot(token, chatID)
 	if err != nil {
 		log.Fatalln(err)
 	}
-
-	wg := sync.WaitGroup{}
-	wg.Add(1)
 	go bot.listen()
-	log.Println(bot.notify("Hello world!"))
-	wg.Wait()
+
+	bdays, err := readBirthdays()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	for t := range time.Tick(time.Hour) {
+		if t.Round(time.Hour).Hour() != 9 { // run once a day between 8:30 and 9:29
+			continue
+		}
+		bot.notify(bdays.at(t)...)
+	}
 }

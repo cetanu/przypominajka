@@ -16,9 +16,9 @@ var _ fmt.Stringer = info{}
 
 func (i info) String() string {
 	if name := i.Name; name != nil {
-		return fmt.Sprintf("%s ma dziś %s", *name, i.Type)
+		return fmt.Sprintf("%s ma dziś %s!", *name, i.Type)
 	}
-	return fmt.Sprintf("%s i %s mają dziś %s", i.Names[0], i.Names[1], i.Type)
+	return fmt.Sprintf("%s i %s mają dziś %s!", i.Names[0], i.Names[1], i.Type)
 }
 
 const (

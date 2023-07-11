@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	tg "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -18,26 +19,22 @@ func newBot(token string, chatID int64) (*bot, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	log.Println("INFO", "Authorized as", api.Self.UserName)
-
-	return &bot{api, chatID}, nil
+	return &bot{api: api, chatID: chatID}, nil
 }
 
-func (b *bot) notify(message string) error {
-	msg := tg.NewMessage(b.chatID, message)
-	msg.ReplyMarkup = tg.NewInlineKeyboardMarkup(
-		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("Done", donePayload),
-		),
-	)
-	_, err := b.api.Send(msg)
-	return err
-}
-
-func (b *bot) edit(messageID int, message string) error {
-	_, err := b.api.Send(tg.NewEditMessageText(b.chatID, messageID, message))
-	return err
+func (b *bot) notify(infos ...info) {
+	for _, i := range infos {
+		msg := tg.NewMessage(b.chatID, i.String())
+		msg.ReplyMarkup = tg.NewInlineKeyboardMarkup(
+			tg.NewInlineKeyboardRow(
+				tg.NewInlineKeyboardButtonData("Done", donePayload),
+			),
+		)
+		if _, err := b.api.Send(msg); err != nil {
+			log.Println("ERROR", err)
+		}
+	}
 }
 
 func (b *bot) listen() {
@@ -47,8 +44,7 @@ func (b *bot) listen() {
 
 	for update := range updates {
 		if update.CallbackQuery != nil {
-			callback := tg.NewCallback(update.CallbackQuery.ID, update.CallbackQuery.Data)
-			if _, err := b.api.Request(callback); err != nil {
+			if _, err := b.api.Request(tg.NewCallback(update.CallbackQuery.ID, update.CallbackQuery.Data)); err != nil {
 				log.Println("ERROR", err)
 				continue
 			}
@@ -57,7 +53,17 @@ func (b *bot) listen() {
 				continue
 			}
 
-			if err := b.edit(update.CallbackQuery.Message.MessageID, "po robocie"); err != nil {
+			edit := tg.NewEditMessageText(
+				b.chatID,
+				update.CallbackQuery.Message.MessageID,
+				fmt.Sprintf(
+					"%s\n\n_%s złożył(a) życzenia_",
+					update.CallbackQuery.Message.Text,
+					update.CallbackQuery.From.UserName,
+				),
+			)
+			edit.ParseMode = tg.ModeMarkdown
+			if _, err := b.api.Send(edit); err != nil {
 				log.Println("ERROR", err)
 				continue
 			}
