@@ -14,16 +14,16 @@ func main() {
 	flag.Int64Var(&chatID, "chat-id", 0, "Telegram chat ID")
 	flag.Parse()
 
+	events, err := readEvents()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
 	bot, err := newBot(token, chatID)
 	if err != nil {
 		log.Fatalln(err)
 	}
 	go bot.listen()
-
-	events, err := readEvents()
-	if err != nil {
-		log.Fatalln(err)
-	}
 
 	for t := range time.Tick(time.Hour) {
 		if t.Round(time.Hour).Hour() != 9 { // run once a day between 8:30 and 9:29
