@@ -1,14 +1,11 @@
 package main
 
 import (
-	_ "embed"
+	"os"
 	"time"
 
 	"gopkg.in/yaml.v3"
 )
-
-//go:embed config.yaml
-var bdayBytes []byte
 
 type events map[time.Month]map[int][]event
 
@@ -20,7 +17,11 @@ func (e events) today() []event {
 	return e.at(time.Now())
 }
 
-func readEvents() (events, error) {
+func readEvents(path string) (events, error) {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
 	var config struct {
 		January   map[int][]event `yaml:"january"`
 		February  map[int][]event `yaml:"february"`
@@ -35,7 +36,7 @@ func readEvents() (events, error) {
 		November  map[int][]event `yaml:"november"`
 		December  map[int][]event `yaml:"december"`
 	}
-	if err := yaml.Unmarshal(bdayBytes, &config); err != nil {
+	if err := yaml.Unmarshal(b, &config); err != nil {
 		return nil, err
 	}
 	return events{

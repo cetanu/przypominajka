@@ -8,13 +8,15 @@ import (
 
 func main() {
 	log.SetFlags(0)
+	var eventsPath string
+	flag.StringVar(&eventsPath, "events", "events.yaml", "YAML file defining events")
 	var token string
 	flag.StringVar(&token, "token", "", "Telegram bot token")
 	var chatID int64
 	flag.Int64Var(&chatID, "chat-id", 0, "Telegram chat ID")
 	flag.Parse()
 
-	events, err := readEvents()
+	events, err := readEvents(eventsPath)
 	if err != nil {
 		log.Fatalln(err)
 	}
