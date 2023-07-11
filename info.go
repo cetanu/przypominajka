@@ -7,9 +7,18 @@ import (
 )
 
 type info struct {
-	Name  string    `yaml:"name"`
-	Names []string  `yaml:"names"`
-	Type  eventType `yaml:"type"`
+	Name  *string    `yaml:"name"`
+	Names *[2]string `yaml:"names"`
+	Type  eventType  `yaml:"type"`
+}
+
+var _ fmt.Stringer = info{}
+
+func (i info) String() string {
+	if name := i.Name; name != nil {
+		return fmt.Sprintf("%s ma dziś %s", *name, i.Type)
+	}
+	return fmt.Sprintf("%s i %s mają dziś %s", i.Names[0], i.Names[1], i.Type)
 }
 
 const (
@@ -27,7 +36,9 @@ func (e eventType) String() string {
 	case birthday:
 		return "urodziny"
 	case nameday:
-		return "nameday"
+		return "imieniny"
+	case wedding:
+		return "rocznicę ślubu"
 	default:
 		return "unknown"
 	}
