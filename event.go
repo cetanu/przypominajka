@@ -57,7 +57,7 @@ func (e event) String() string {
 	return fmt.Sprintf("%s i %s mają dziś %s!", e.Names[0], e.Names[1], e.Type)
 }
 
-func (e event) Validate() error {
+func (e event) validate() error {
 	if e.Name == "" && (e.Names[0] == "" && e.Names[1] == "") {
 		return errMissingNameOrNames
 	}
