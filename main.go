@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -94,22 +93,12 @@ func main() {
 		Use:   "serve",
 		Short: "Start Telegram bot",
 		Run: func(cmd *cobra.Command, args []string) {
-			bot, err := newBot(token, chatID)
+			bot, err := newBot(token, chatID, events)
 			if err != nil {
 				log.Fatalln("FATAL", err)
 			}
 			go bot.listen()
-
-			for t := range time.Tick(time.Hour) {
-				if t.Round(time.Hour).Hour() != 9 { // run once a day between 8:30 and 9:29
-					continue
-				}
-				for _, e := range events.today() {
-					if err := bot.send(e); err != nil {
-						log.Println("ERROR", err)
-					}
-				}
-			}
+			bot.serve()
 		},
 	}
 

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	tg "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -12,15 +13,16 @@ const dataDone = "done"
 type bot struct {
 	api    *tg.BotAPI
 	chatID int64
+	events events
 }
 
-func newBot(token string, chatID int64) (*bot, error) {
+func newBot(token string, chatID int64, events events) (*bot, error) {
 	api, err := tg.NewBotAPI(token)
 	if err != nil {
 		return nil, err
 	}
 	log.Println("INFO", "Authorized as", api.Self.UserName)
-	return &bot{api: api, chatID: chatID}, nil
+	return &bot{api: api, chatID: chatID, events: events}, nil
 }
 
 func (b *bot) send(e event) error {
@@ -32,6 +34,19 @@ func (b *bot) send(e event) error {
 	)
 	_, err := b.api.Send(msg)
 	return fmt.Errorf("failed to send message: %w", err)
+}
+
+func (b *bot) serve() {
+	for t := range time.Tick(time.Hour) {
+		if t.Round(time.Hour).Hour() != 9 { // run once a day between 8:30 and 9:29
+			continue
+		}
+		for _, e := range b.events.today() {
+			if err := b.send(e); err != nil {
+				log.Println("ERROR", err)
+			}
+		}
+	}
 }
 
 func (b *bot) listen() {
