@@ -70,7 +70,7 @@ func main() {
 		Use:   "list",
 		Short: "List all events",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Print(year)
+			fmt.Println(year)
 		},
 	}
 
