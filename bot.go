@@ -63,9 +63,9 @@ func (b *bot) listen() {
 				continue
 			}
 		case update.Message.IsCommand():
-			switch update.Message.Command() {
-			case "next":
-				// TODO:
+			if err := b.handleCommand(update); err != nil {
+				log.Println("ERROR", err)
+				continue
 			}
 		}
 	}
@@ -87,4 +87,10 @@ func (b *bot) callbackDone(cq *tg.CallbackQuery) error {
 	edit.ParseMode = tg.ModeMarkdown
 	_, err := b.api.Send(edit)
 	return fmt.Errorf("failed to edit message: %w", err)
+}
+
+func (b *bot) handleCommand(update tg.Update) error {
+	switch update.Message.Command() {
+	}
+	return nil
 }
