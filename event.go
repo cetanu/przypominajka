@@ -9,12 +9,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const (
-	birthday eventType = "birthday"
-	nameday  eventType = "nameday"
-	wedding  eventType = "wedding anniversary"
-)
-
 var (
 	errMissingNameOrNames = errors.New("'name' or 'names' must be provided")
 	errNameOrNames        = errors.New("'name' is mutually exclusive with 'names'")
@@ -25,10 +19,6 @@ var (
 func newErrInvalidEventType(et eventType) error {
 	return fmt.Errorf("%w: %s", errInvalidEventType, et)
 }
-
-type eventType string
-
-var _ fmt.Stringer = eventType("")
 
 type events []event
 
@@ -48,18 +38,6 @@ type event struct {
 }
 
 var _ yaml.Unmarshaler = (*event)(nil)
-
-func (et eventType) String() string {
-	switch et {
-	case birthday:
-		return formatBirthday
-	case nameday:
-		return formatNameday
-	case wedding:
-		return formatWeddingAnniversary
-	}
-	return string(et)
-}
 
 func (e *event) UnmarshalYAML(value *yaml.Node) error {
 	s := struct {
