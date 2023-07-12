@@ -26,7 +26,7 @@ func newBot(token string, chatID int64, y year) (*bot, error) {
 }
 
 func (b *bot) send(e event) error {
-	msg := tg.NewMessage(b.chatID, e.String())
+	msg := tg.NewMessage(b.chatID, e.format(false))
 	msg.ReplyMarkup = tg.NewInlineKeyboardMarkup(
 		tg.NewInlineKeyboardRow(
 			tg.NewInlineKeyboardButtonData("Done", dataDone),

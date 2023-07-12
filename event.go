@@ -79,6 +79,29 @@ func (e *event) UnmarshalYAML(value *yaml.Node) error {
 	return e.validate()
 }
 
+func (e event) format(list bool) string {
+	switch {
+	case e.Name != "" && e.Surname == "" && !list:
+		return fmt.Sprintf(formatSingular, e.Name, e.Type)
+	case e.Name != "" && e.Surname == "":
+		return fmt.Sprintf(formatListSingular, e.Name, e.Type)
+	case e.Name != "" && e.Surname != "" && !list:
+		return fmt.Sprintf(formatSingularSurname, e.Name, e.Surname, e.Type)
+	case e.Name != "" && e.Surname != "":
+		return fmt.Sprintf(formatListSingularSurname, e.Name, e.Surname, e.Type)
+		// Plural
+	case e.Surname == "" && !list:
+		return fmt.Sprintf(formatMessagePlural, e.Names[0], e.Names[1], e.Type)
+	case e.Surname == "" && list:
+		return fmt.Sprintf(formatListMessagePlural, e.Names[0], e.Names[1], e.Type)
+	case e.Surname != "" && !list:
+		return fmt.Sprintf(formatMessagePluralSurname, e.Names[0], e.Names[1], e.Surname, e.Type)
+	case e.Surname != "" && list:
+		return fmt.Sprintf(formatListMessagePluralSurname, e.Names[0], e.Names[1], e.Surname, e.Type)
+	}
+	return ""
+}
+
 func (e event) validate() error {
 	if e.Name == "" && (e.Names[0] == "" && e.Names[1] == "") {
 		return errMissingNameOrNames
