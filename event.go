@@ -23,9 +23,10 @@ type eventType string
 var _ fmt.Stringer = eventType("")
 
 type event struct {
-	Name  string    `yaml:"name"`
-	Names [2]string `yaml:"names"`
-	Type  eventType `yaml:"type"`
+	Name    string    `yaml:"name"`
+	Names   [2]string `yaml:"names"`
+	Surname string    `yaml:"surname"`
+	Type    eventType `yaml:"type"`
 }
 
 var _ fmt.Stringer = event{}
@@ -44,8 +45,14 @@ func (et eventType) String() string {
 }
 
 func (e event) String() string {
-	if name := e.Name; name != "" {
-		return fmt.Sprintf("%s ma dziś %s!", name, e.Type)
+	if e.Name != "" {
+		if e.Surname != "" {
+			return fmt.Sprintf("%s %s ma dziś %s!", e.Name, e.Surname, e.Type)
+		}
+		return fmt.Sprintf("%s ma dziś %s!", e.Name, e.Type)
+	}
+	if e.Surname != "" {
+		return fmt.Sprintf("%s i %s %s mają dziś %s!", e.Names[0], e.Names[1], e.Surname, e.Type)
 	}
 	return fmt.Sprintf("%s i %s mają dziś %s!", e.Names[0], e.Names[1], e.Type)
 }
