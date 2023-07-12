@@ -83,9 +83,7 @@ func main() {
 				fmt.Println("No events found")
 				return
 			}
-			for _, event := range next {
-				fmt.Printf(formatListLine, day, month, event)
-			}
+			fmt.Println(next.format(month, day))
 		},
 	}
 

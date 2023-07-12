@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strings"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -28,6 +30,16 @@ type eventType string
 
 var _ fmt.Stringer = eventType("")
 
+type events []event
+
+func (ev events) format(month time.Month, day int) string {
+	lines := make([]string, len(ev))
+	for i, e := range ev {
+		lines[i] = fmt.Sprintf(formatListLine, day, month, e.format(true))
+	}
+	return strings.Join(lines, "\n")
+}
+
 type event struct {
 	Name    string    `yaml:"name"`
 	Names   [2]string `yaml:"names"`
@@ -35,10 +47,7 @@ type event struct {
 	Type    eventType `yaml:"type"`
 }
 
-var (
-	_ fmt.Stringer     = event{}
-	_ yaml.Unmarshaler = (*event)(nil)
-)
+var _ yaml.Unmarshaler = (*event)(nil)
 
 func (et eventType) String() string {
 	switch et {
@@ -50,19 +59,6 @@ func (et eventType) String() string {
 		return formatWeddingAnniversary
 	}
 	return string(et)
-}
-
-func (e event) String() string {
-	if e.Name != "" {
-		if e.Surname != "" {
-			return fmt.Sprintf(formatSingularSurname, e.Name, e.Surname, e.Type)
-		}
-		return fmt.Sprintf(formatSingular, e.Name, e.Type)
-	}
-	if e.Surname != "" {
-		return fmt.Sprintf(formatMessagePluralSurname, e.Names[0], e.Names[1], e.Surname, e.Type)
-	}
-	return fmt.Sprintf(formatMessagePlural, e.Names[0], e.Names[1], e.Type)
 }
 
 func (e *event) UnmarshalYAML(value *yaml.Node) error {

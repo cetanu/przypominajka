@@ -23,5 +23,5 @@ const (
 	// formatDone is populated with: caller's username and edited message text.
 	formatDone = "_✅ %s złożył(a) życzenia_\n\n%s"
 	// formatListLine is populated with: day, month, and event.
-	formatListLine = "%02d.%02d - %s\n"
+	formatListLine = "%02d.%02d - %s"
 )
