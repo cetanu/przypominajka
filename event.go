@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 	"fmt"
+
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -33,7 +35,10 @@ type event struct {
 	Type    eventType `yaml:"type"`
 }
 
-var _ fmt.Stringer = event{}
+var (
+	_ fmt.Stringer     = event{}
+	_ yaml.Unmarshaler = (*event)(nil)
+)
 
 func (et eventType) String() string {
 	switch et {
@@ -58,6 +63,20 @@ func (e event) String() string {
 		return fmt.Sprintf("%s i %s %s mają dziś %s!", e.Names[0], e.Names[1], e.Surname, e.Type)
 	}
 	return fmt.Sprintf("%s i %s mają dziś %s!", e.Names[0], e.Names[1], e.Type)
+}
+
+func (e *event) UnmarshalYAML(value *yaml.Node) error {
+	s := struct {
+		Name    string    `yaml:"name"`
+		Names   [2]string `yaml:"names"`
+		Surname string    `yaml:"surname"`
+		Type    eventType `yaml:"type"`
+	}{}
+	if err := value.Decode(&s); err != nil {
+		return err
+	}
+	*e = s
+	return e.validate()
 }
 
 func (e event) validate() error {
