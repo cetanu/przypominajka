@@ -69,9 +69,24 @@ func main() {
 
 	cmdList := &cobra.Command{
 		Use:   "list",
-		Short: "List events",
+		Short: "List all events",
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Print(events)
+		},
+	}
+
+	cmdNext := &cobra.Command{
+		Use:   "next",
+		Short: "Find the next day with events and list them",
+		Run: func(cmd *cobra.Command, args []string) {
+			month, day, next := events.next()
+			if len(next) == 0 {
+				fmt.Println("No events found")
+				return
+			}
+			for _, event := range next {
+				fmt.Printf(formatListLine, day, month, event)
+			}
 		},
 	}
 
@@ -94,7 +109,7 @@ func main() {
 		},
 	}
 
-	cmd.AddCommand(cmdList, cmdServe)
+	cmd.AddCommand(cmdList, cmdNext, cmdServe)
 	cmd.PersistentFlags().StringVar(&eventsPath, "events", "events.yaml", "YAML file defining events")
 	cmdServe.Flags().StringVar(&token, "token", "", "Telegram bot token")
 	if err := cmdServe.MarkFlagRequired("token"); err != nil {

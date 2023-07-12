@@ -13,6 +13,17 @@ type events map[time.Month]map[int][]event
 
 var _ fmt.Stringer = events{}
 
+func (e events) next() (time.Month, int, []event) {
+	now := time.Now()
+	nextYear := now.AddDate(1, 0, 0)
+	for t := now; t.Before(nextYear); t = t.AddDate(0, 0, 1) {
+		if events := e.at(t); len(events) > 0 {
+			return t.Month(), t.Day(), events
+		}
+	}
+	return 0, 0, nil
+}
+
 func (e events) at(t time.Time) []event {
 	return e[t.Month()][t.Day()]
 }

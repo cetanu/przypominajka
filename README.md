@@ -22,7 +22,7 @@ Description:
   The reminders are sent out on the day of the event between 08:30 and 09:29
   system time (exact time depends on serve command startup time).
 
-  Reminders are written in Polish. 
+  Reminders are written in Polish.
 
 Example events.yaml:
   january:
@@ -49,7 +49,8 @@ Usage:
 
 Available Commands:
   help        Help about any command
-  list        List events
+  list        List all events
+  next        Find the next day with events and list them
   serve       Start Telegram bot
 
 Flags:
@@ -62,7 +63,7 @@ Use "przypominajka [command] --help" for more information about a command.
 
 ### List
 ```
-List events
+List all events
 
 Usage:
   przypominajka list [flags]
