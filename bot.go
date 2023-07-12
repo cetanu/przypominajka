@@ -7,7 +7,7 @@ import (
 	tg "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-const donePayload = "done"
+const dataDone = "done"
 
 type bot struct {
 	api    *tg.BotAPI
@@ -28,7 +28,7 @@ func (b *bot) send(events ...event) {
 		msg := tg.NewMessage(b.chatID, i.String())
 		msg.ReplyMarkup = tg.NewInlineKeyboardMarkup(
 			tg.NewInlineKeyboardRow(
-				tg.NewInlineKeyboardButtonData("Done", donePayload),
+				tg.NewInlineKeyboardButtonData("Done", dataDone),
 			),
 		)
 		if _, err := b.api.Send(msg); err != nil {
@@ -38,33 +38,31 @@ func (b *bot) send(events ...event) {
 }
 
 func (b *bot) listen() {
+	var err error
 	u := tg.NewUpdate(0)
 	u.Timeout = 60
 	for update := range b.api.GetUpdatesChan(u) {
 		if update.CallbackQuery != nil {
 			if _, err := b.api.Request(tg.NewCallback(update.CallbackQuery.ID, update.CallbackQuery.Data)); err != nil {
-				log.Println("ERROR", "failed to register callback:", err)
+				log.Println("ERROR", "failed to receive callback:", err)
 				continue
 			}
 
-			if update.CallbackQuery.Data != donePayload {
-				continue
+			switch update.CallbackQuery.Data {
+			case dataDone:
+				err = b.callbackDone(update.CallbackQuery)
 			}
-
-			edit := tg.NewEditMessageText(
-				b.chatID,
-				update.CallbackQuery.Message.MessageID,
-				fmt.Sprintf(
-					formatDone,
-					update.CallbackQuery.From.UserName,
-					update.CallbackQuery.Message.Text,
-				),
-			)
-			edit.ParseMode = tg.ModeMarkdown
-			if _, err := b.api.Send(edit); err != nil {
-				log.Println("ERROR", "failed to edit message:", err)
+			if err != nil {
+				log.Println("ERROR", err)
 				continue
 			}
 		}
 	}
+}
+
+func (b *bot) callbackDone(cq *tg.CallbackQuery) error {
+	edit := tg.NewEditMessageText(b.chatID, cq.Message.MessageID, fmt.Sprintf(formatDone, cq.From.UserName, cq.Message.Text))
+	edit.ParseMode = tg.ModeMarkdown
+	_, err := b.api.Send(edit)
+	return fmt.Errorf("failed to edit message: %w", err)
 }
