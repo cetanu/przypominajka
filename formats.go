@@ -27,4 +27,5 @@ const (
 const (
 	// msgFormatDone is populated with: caller's username and edited message text.
 	msgFormatDone     = "_✅ %s złożył(a) życzenia_\n\n%s"
+	msgFormatNoEvents = "Nie znalazłem żadnych wydarzeń"
 )

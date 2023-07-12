@@ -90,7 +90,19 @@ func (b *bot) callbackDone(cq *tg.CallbackQuery) error {
 }
 
 func (b *bot) handleCommand(update tg.Update) error {
+	// NOTE: if another bot has /next command, then this will be triggered.
+	// To prevent this behavior, we can CommandWithAt() and check whether
+	// <command>@<bot_name> matches.
 	switch update.Message.Command() {
+	case "next":
+		text := msgFormatNoEvents
+		m, d, events := b.year.next()
+		if len(events) > 0 {
+			text = events.format(m, d)
+		}
+		if _, err := b.api.Send(tg.NewMessage(b.chatID, text)); err != nil {
+			return err
+		}
 	}
 	return nil
 }

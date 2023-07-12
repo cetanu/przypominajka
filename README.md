@@ -104,3 +104,14 @@ Flags:
 Global Flags:
       --events string   YAML file defining events (default "events.yaml")
 ```
+
+## Bot Setup
+Define the following commands for the bot:
+```
+next - Find the next day with events and list them
+```
+
+### Polish
+```
+next - Znajdź najbliższy dzień z wydarzeniami i wypisz te wydarzenia
+```
