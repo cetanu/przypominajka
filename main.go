@@ -104,7 +104,11 @@ func main() {
 				if t.Round(time.Hour).Hour() != 9 { // run once a day between 8:30 and 9:29
 					continue
 				}
-				bot.send(events.today()...)
+				for _, e := range events.today() {
+					if err := bot.send(e); err != nil {
+						log.Println("ERROR", err)
+					}
+				}
 			}
 		},
 	}

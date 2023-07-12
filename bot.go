@@ -23,18 +23,15 @@ func newBot(token string, chatID int64) (*bot, error) {
 	return &bot{api: api, chatID: chatID}, nil
 }
 
-func (b *bot) send(events ...event) {
-	for _, i := range events {
-		msg := tg.NewMessage(b.chatID, i.String())
-		msg.ReplyMarkup = tg.NewInlineKeyboardMarkup(
-			tg.NewInlineKeyboardRow(
-				tg.NewInlineKeyboardButtonData("Done", dataDone),
-			),
-		)
-		if _, err := b.api.Send(msg); err != nil {
-			log.Println("ERROR", "failed to send message:", err)
-		}
-	}
+func (b *bot) send(e event) error {
+	msg := tg.NewMessage(b.chatID, e.String())
+	msg.ReplyMarkup = tg.NewInlineKeyboardMarkup(
+		tg.NewInlineKeyboardRow(
+			tg.NewInlineKeyboardButtonData("Done", dataDone),
+		),
+	)
+	_, err := b.api.Send(msg)
+	return fmt.Errorf("failed to send message: %w", err)
 }
 
 func (b *bot) listen() {
