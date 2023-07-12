@@ -44,9 +44,7 @@ func (y year) String() string {
 			if !ok {
 				continue
 			}
-			for _, event := range day {
-				lines = append(lines, fmt.Sprintf(formatListLine, d, m, event.format(true)))
-			}
+			lines = append(lines, day.format(m, d))
 		}
 	}
 	return strings.Join(lines, "\n")
