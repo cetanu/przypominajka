@@ -23,8 +23,17 @@ func (e events) today() []event {
 
 func (e events) String() string {
 	var sb strings.Builder
-	for m, month := range e {
-		for d, day := range month {
+
+	for m := time.January; m <= time.December; m++ {
+		month, ok := e[m]
+		if !ok {
+			continue
+		}
+		for d := 1; d <= 31; d++ {
+			day, ok := month[d]
+			if !ok {
+				continue
+			}
 			for _, event := range day {
 				sb.WriteString(fmt.Sprintf(formatListLine, d, m, event))
 			}
