@@ -48,10 +48,10 @@ Usage:
   przypominajka [command]
 
 Available Commands:
+  bot         Start Telegram bot to serve events and listen for updates
   help        Help about any command
   list        List all events
   next        Find the next day with events and list them
-  serve       Start Telegram bot
 
 Flags:
       --events string   YAML file defining events (default "events.yaml")
@@ -59,6 +59,22 @@ Flags:
   -v, --version         version for przypominajka
 
 Use "przypominajka [command] --help" for more information about a command.
+```
+
+### Bot
+```
+Start Telegram bot to serve events and listen for updates
+
+Usage:
+  przypominajka bot [flags]
+
+Flags:
+      --chat-id int    Telegram chat ID
+  -h, --help           help for bot
+      --token string   Telegram bot token
+
+Global Flags:
+      --events string   YAML file defining events (default "events.yaml")
 ```
 
 ### List
@@ -75,17 +91,15 @@ Global Flags:
       --events string   YAML file defining events (default "events.yaml")
 ```
 
-### Serve
+### Next
 ```
-Start Telegram bot
+Find the next day with events and list them
 
 Usage:
-  przypominajka serve [flags]
+  przypominajka next [flags]
 
 Flags:
-      --chat-id int    Telegram chat ID
-  -h, --help           help for serve
-      --token string   Telegram bot token
+  -h, --help   help for next
 
 Global Flags:
       --events string   YAML file defining events (default "events.yaml")

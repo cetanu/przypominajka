@@ -88,8 +88,8 @@ func main() {
 	}
 
 	cmdServe := &cobra.Command{
-		Use:   "serve",
-		Short: "Start Telegram bot",
+		Use:   "bot",
+		Short: "Start Telegram bot to serve events and listen for updates",
 		Run: func(cmd *cobra.Command, args []string) {
 			bot, err := newBot(token, chatID, year)
 			if err != nil {
