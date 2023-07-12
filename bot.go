@@ -55,7 +55,7 @@ func (b *bot) listen() {
 				b.chatID,
 				update.CallbackQuery.Message.MessageID,
 				fmt.Sprintf(
-					"_✅ %s złożył(a) życzenia_\n\n%s",
+					formatDone,
 					update.CallbackQuery.From.UserName,
 					update.CallbackQuery.Message.Text,
 				),

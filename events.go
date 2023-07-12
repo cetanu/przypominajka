@@ -26,7 +26,7 @@ func (e events) String() string {
 	for m, month := range e {
 		for d, day := range month {
 			for _, event := range day {
-				sb.WriteString(fmt.Sprintf("%02d.%02d - %s\n", d, m, event))
+				sb.WriteString(fmt.Sprintf(formatListLine, d, m, event))
 			}
 		}
 	}

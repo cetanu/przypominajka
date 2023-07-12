@@ -43,11 +43,11 @@ var (
 func (et eventType) String() string {
 	switch et {
 	case birthday:
-		return "urodziny"
+		return formatBirthday
 	case nameday:
-		return "imieniny"
+		return formatNameday
 	case wedding:
-		return "rocznicę ślubu"
+		return formatWeddingAnniversary
 	}
 	return string(et)
 }
@@ -55,14 +55,14 @@ func (et eventType) String() string {
 func (e event) String() string {
 	if e.Name != "" {
 		if e.Surname != "" {
-			return fmt.Sprintf("%s %s ma dziś %s!", e.Name, e.Surname, e.Type)
+			return fmt.Sprintf(formatSingularSurname, e.Name, e.Surname, e.Type)
 		}
-		return fmt.Sprintf("%s ma dziś %s!", e.Name, e.Type)
+		return fmt.Sprintf(formatSingular, e.Name, e.Type)
 	}
 	if e.Surname != "" {
-		return fmt.Sprintf("%s i %s %s mają dziś %s!", e.Names[0], e.Names[1], e.Surname, e.Type)
+		return fmt.Sprintf(formatMessagePluralSurname, e.Names[0], e.Names[1], e.Surname, e.Type)
 	}
-	return fmt.Sprintf("%s i %s mają dziś %s!", e.Names[0], e.Names[1], e.Type)
+	return fmt.Sprintf(formatMessagePlural, e.Names[0], e.Names[1], e.Type)
 }
 
 func (e *event) UnmarshalYAML(value *yaml.Node) error {
