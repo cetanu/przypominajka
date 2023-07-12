@@ -16,10 +16,6 @@ var (
 	errInvalidEventType   = errors.New("invalid event type")
 )
 
-func newErrInvalidEventType(et eventType) error {
-	return fmt.Errorf("%w: %s", errInvalidEventType, et)
-}
-
 type events []event
 
 func (ev events) format(month time.Month, day int) string {
@@ -89,7 +85,7 @@ func (e event) validate() error {
 	switch e.Type {
 	case birthday, nameday, wedding:
 	default:
-		return newErrInvalidEventType(e.Type)
+		return errInvalidEventType
 	}
 	return nil
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"strconv"
 	"testing"
 )
@@ -65,7 +64,7 @@ func TestValidate(t *testing.T) {
 
 	for i, tt := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			if err := tt.e.validate(); err != tt.expected && !errors.Is(err, tt.expected) {
+			if err := tt.e.validate(); err != tt.expected {
 				t.Errorf("expected %s, got %s", tt.expected, err)
 			}
 		})
