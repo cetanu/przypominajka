@@ -42,7 +42,7 @@ func main() {
 	log.SetFlags(0)
 
 	var (
-		events     events
+		y          year
 		eventsPath string
 		token      string
 		chatID     int64
@@ -57,11 +57,11 @@ func main() {
 			if use := cmd.Parent().Use; use == "completion" || use == "help" {
 				return nil
 			}
-			e, err := readEvents(eventsPath)
+			e, err := readYear(eventsPath)
 			if err != nil {
 				return err
 			}
-			events = e
+			y = e
 			return nil
 		},
 	}
@@ -70,7 +70,7 @@ func main() {
 		Use:   "list",
 		Short: "List all events",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Print(events)
+			fmt.Print(y)
 		},
 	}
 
@@ -78,7 +78,7 @@ func main() {
 		Use:   "next",
 		Short: "Find the next day with events and list them",
 		Run: func(cmd *cobra.Command, args []string) {
-			month, day, next := events.next()
+			month, day, next := y.next()
 			if len(next) == 0 {
 				fmt.Println("No events found")
 				return
@@ -93,7 +93,7 @@ func main() {
 		Use:   "serve",
 		Short: "Start Telegram bot",
 		Run: func(cmd *cobra.Command, args []string) {
-			bot, err := newBot(token, chatID, events)
+			bot, err := newBot(token, chatID, y)
 			if err != nil {
 				log.Fatalln("FATAL", err)
 			}

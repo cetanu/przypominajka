@@ -9,30 +9,30 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type events map[time.Month]map[int][]event
+type year map[time.Month]map[int][]event
 
-var _ fmt.Stringer = events{}
+var _ fmt.Stringer = year{}
 
-func (e events) next() (time.Month, int, []event) {
+func (y year) next() (time.Month, int, []event) {
 	now := time.Now()
 	nextYear := now.AddDate(1, 0, 0)
 	for t := now; t.Before(nextYear); t = t.AddDate(0, 0, 1) {
-		if events := e.at(t); len(events) > 0 {
+		if events := y.at(t); len(events) > 0 {
 			return t.Month(), t.Day(), events
 		}
 	}
 	return 0, 0, nil
 }
 
-func (e events) at(t time.Time) []event {
-	return e[t.Month()][t.Day()]
+func (y year) at(t time.Time) []event {
+	return y[t.Month()][t.Day()]
 }
 
-func (e events) today() []event {
-	return e.at(time.Now())
+func (y year) today() []event {
+	return y.at(time.Now())
 }
 
-func (e events) String() string {
+func (e year) String() string {
 	var sb strings.Builder
 
 	for m := time.January; m <= time.December; m++ {
@@ -53,7 +53,7 @@ func (e events) String() string {
 	return sb.String()
 }
 
-func readEvents(path string) (events, error) {
+func readYear(path string) (year, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -75,7 +75,7 @@ func readEvents(path string) (events, error) {
 	if err := yaml.Unmarshal(b, &config); err != nil {
 		return nil, err
 	}
-	return events{
+	return year{
 		time.January:   config.January,
 		time.February:  config.February,
 		time.March:     config.March,
