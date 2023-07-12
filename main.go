@@ -55,7 +55,7 @@ func main() {
 		Version:           version,
 		CompletionOptions: cobra.CompletionOptions{HiddenDefaultCmd: true},
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			if cmd.Parent().Use == "completion" {
+			if use := cmd.Parent().Use; use == "completion" || use == "help" {
 				return nil
 			}
 			e, err := readEvents(eventsPath)
