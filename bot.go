@@ -13,7 +13,7 @@ const dataDone = "done"
 type bot struct {
 	api    *tg.BotAPI
 	chatID int64
-	y      year
+	year   year
 }
 
 func newBot(token string, chatID int64, y year) (*bot, error) {
@@ -22,7 +22,7 @@ func newBot(token string, chatID int64, y year) (*bot, error) {
 		return nil, err
 	}
 	log.Println("INFO", "Authorized as", api.Self.UserName)
-	return &bot{api: api, chatID: chatID, y: y}, nil
+	return &bot{api: api, chatID: chatID, year: y}, nil
 }
 
 func (b *bot) send(e event) error {
@@ -41,7 +41,7 @@ func (b *bot) serve() {
 		if t.Round(time.Hour).Hour() != 9 { // run once a day between 8:30 and 9:29
 			continue
 		}
-		for _, e := range b.y.today() {
+		for _, e := range b.year.today() {
 			if err := b.send(e); err != nil {
 				log.Println("ERROR", err)
 			}
