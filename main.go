@@ -18,12 +18,12 @@ func main() {
 
 	events, err := readEvents(eventsPath)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalln("FATAL", err)
 	}
 
 	bot, err := newBot(token, chatID)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalln("FATAL", err)
 	}
 	go bot.listen()
 
