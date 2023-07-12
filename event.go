@@ -1,9 +1,8 @@
 package main
 
 import (
+	"errors"
 	"fmt"
-
-	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -12,14 +11,21 @@ const (
 	wedding  eventType = "wedding anniversary"
 )
 
+var (
+	errMissingNameOrNames = errors.New("'name' or 'names' must be provided")
+	errNameOrNames        = errors.New("'name' is mutually exclusive with 'names'")
+	errNamesArePair       = errors.New("'names' must have two elements")
+	errInvalidEventType   = errors.New("invalid event type")
+)
+
 type eventType string
 
 var _ fmt.Stringer = eventType("")
 
 type event struct {
-	Name  *string    `yaml:"name"`
-	Names *[2]string `yaml:"names"`
-	Type  eventType  `yaml:"type"`
+	Name  string    `yaml:"name"`
+	Names [2]string `yaml:"names"`
+	Type  eventType `yaml:"type"`
 }
 
 var _ fmt.Stringer = event{}
@@ -37,19 +43,28 @@ func (et eventType) String() string {
 	}
 }
 
-func (et *eventType) UnmarshalYAML(value *yaml.Node) error {
-	switch v := eventType(value.Value); v {
-	case birthday, nameday, wedding:
-		*et = v
-	default:
-		return fmt.Errorf("invalid type: %s", value.Value)
-	}
-	return nil
-}
-
 func (e event) String() string {
-	if name := e.Name; name != nil {
-		return fmt.Sprintf("%s ma dziś %s!", *name, e.Type)
+	if name := e.Name; name != "" {
+		return fmt.Sprintf("%s ma dziś %s!", name, e.Type)
 	}
 	return fmt.Sprintf("%s i %s mają dziś %s!", e.Names[0], e.Names[1], e.Type)
+}
+
+func (e event) Validate() error {
+	if e.Name == "" && (e.Names[0] == "" && e.Names[1] == "") {
+		return errMissingNameOrNames
+	}
+	if e.Name != "" && (e.Names[0] != "" || e.Names[1] != "") {
+		return errNameOrNames
+	}
+	if e.Name == "" && (e.Names[0] == "" || e.Names[1] == "") {
+		return errNamesArePair
+	}
+	switch e.Type {
+	case birthday, nameday, wedding:
+	default:
+		return errInvalidEventType
+	}
+
+	return nil
 }
