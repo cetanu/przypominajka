@@ -72,6 +72,5 @@ func (e event) Validate() error {
 	default:
 		return errInvalidEventType
 	}
-
 	return nil
 }
