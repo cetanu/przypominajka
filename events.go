@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -9,12 +11,26 @@ import (
 
 type events map[time.Month]map[int][]event
 
+var _ fmt.Stringer = events{}
+
 func (e events) at(t time.Time) []event {
 	return e[t.Month()][t.Day()]
 }
 
 func (e events) today() []event {
 	return e.at(time.Now())
+}
+
+func (e events) String() string {
+	var sb strings.Builder
+	for m, month := range e {
+		for d, day := range month {
+			for _, event := range day {
+				sb.WriteString(fmt.Sprintf("%02d.%02d - %s\n", d, m, event))
+			}
+		}
+	}
+	return sb.String()
 }
 
 func readEvents(path string) (events, error) {
