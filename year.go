@@ -12,17 +12,21 @@ import (
 
 type year map[time.Month]map[int]models.Events
 
-var _ fmt.Stringer = year{}
+var (
+	_ fmt.Stringer   = year{}
+	_ models.Storage = year{}
+)
 
 func (y year) next() (time.Month, int, models.Events) {
-	now := time.Now()
-	nextYear := now.AddDate(1, 0, 0)
-	for t := now; t.Before(nextYear); t = t.AddDate(0, 0, 1) {
-		if events := y.at(t); len(events) > 0 {
-			return t.Month(), t.Day(), events
-		}
+	events, _ := models.Next(y)
+	if len(events) > 0 {
+		return events[0].Month, events[0].Day, events
 	}
 	return 0, 0, nil
+}
+
+func (y year) At(t time.Time) (models.Events, error) {
+	return y.at(t), nil
 }
 
 func (y year) at(t time.Time) models.Events {
