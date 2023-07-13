@@ -3,6 +3,7 @@ package storage
 import (
 	"errors"
 	"os"
+	"strings"
 	"time"
 
 	"git.sr.ht/~tymek/przypominajka/models"
@@ -68,6 +69,18 @@ func NewYAML(path string) (YAML, error) {
 		}
 	}
 	return y, nil
+}
+
+func (y YAML) String() string {
+	lines := []string{}
+	for m := time.January; m <= time.December; m++ {
+		for d := 1; d <= 31; d++ {
+			if events, ok := y[m][d]; ok {
+				lines = append(lines, events.String())
+			}
+		}
+	}
+	return strings.Join(lines, "\n")
 }
 
 func (y YAML) At(t time.Time) (models.Events, error) {

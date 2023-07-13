@@ -1,12 +1,14 @@
 package storage
 
 import (
+	"fmt"
 	"time"
 
 	"git.sr.ht/~tymek/przypominajka/models"
 )
 
 type Interface interface {
+	fmt.Stringer
 	At(t time.Time) (models.Events, error)
 }
 
