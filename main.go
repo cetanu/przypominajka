@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"git.sr.ht/~tymek/przypominajka/storage"
 	"github.com/spf13/cobra"
 )
 
@@ -42,7 +43,7 @@ func main() {
 	log.SetFlags(0)
 
 	var (
-		year       year
+		s          storage.Interface
 		eventsPath string
 		token      string
 		chatID     int64
@@ -57,11 +58,11 @@ func main() {
 			if use := cmd.Parent().Use; use == "completion" || use == "help" {
 				return nil
 			}
-			y, err := readYear(eventsPath)
+			y, err := storage.NewYAML(eventsPath)
 			if err != nil {
 				return err
 			}
-			year = y
+			s = y
 			return nil
 		},
 	}
@@ -70,20 +71,24 @@ func main() {
 		Use:   "list",
 		Short: "List all events",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(year)
+			fmt.Println(s) // TODO:
 		},
 	}
 
 	cmdNext := &cobra.Command{
 		Use:   "next",
 		Short: "Find the next day with events and list them",
-		Run: func(cmd *cobra.Command, args []string) {
-			month, day, next := year.next()
-			if len(next) == 0 {
-				fmt.Println("No events found")
-				return
+		RunE: func(cmd *cobra.Command, args []string) error {
+			events, err := storage.Next(s)
+			if err != nil {
+				return err
 			}
-			fmt.Println(next.Format(month, day))
+			text := "No events found"
+			if len(events) > 0 {
+				text = events.Format(events[0].Month, events[0].Day)
+			}
+			fmt.Println(text)
+			return nil
 		},
 	}
 
@@ -91,7 +96,7 @@ func main() {
 		Use:   "bot",
 		Short: "Start Telegram bot to serve events and listen for updates",
 		Run: func(cmd *cobra.Command, args []string) {
-			bot, err := newBot(token, chatID, year)
+			bot, err := newBot(token, chatID, s)
 			if err != nil {
 				log.Fatalln("FATAL", err)
 			}

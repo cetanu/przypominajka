@@ -7,22 +7,22 @@ import (
 )
 
 const (
-	birthday eventType = "birthday"
-	nameday  eventType = "nameday"
-	wedding  eventType = "wedding anniversary"
+	Birthday EventType = "birthday"
+	Nameday  EventType = "nameday"
+	Wedding  EventType = "wedding anniversary"
 )
 
-type eventType string
+type EventType string
 
-var _ fmt.Stringer = eventType("")
+var _ fmt.Stringer = EventType("")
 
-func (et eventType) String() string {
+func (et EventType) String() string {
 	switch et {
-	case birthday:
+	case Birthday:
 		return format.Birthday
-	case nameday:
+	case Nameday:
 		return format.Nameday
-	case wedding:
+	case Wedding:
 		return format.WeddingAnniversary
 	}
 	return string(et)

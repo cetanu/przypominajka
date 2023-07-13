@@ -25,3 +25,7 @@ func Next(s Interface) (models.Events, error) {
 	}
 	return nil, models.ErrNotFound
 }
+
+func Today(s Interface) (models.Events, error) {
+	return s.At(time.Now())
+}

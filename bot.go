@@ -7,6 +7,7 @@ import (
 
 	"git.sr.ht/~tymek/przypominajka/format"
 	"git.sr.ht/~tymek/przypominajka/models"
+	"git.sr.ht/~tymek/przypominajka/storage"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -15,16 +16,16 @@ const dataDone = "done"
 type bot struct {
 	api    *tg.BotAPI
 	chatID int64
-	year   year
+	s      storage.Interface
 }
 
-func newBot(token string, chatID int64, y year) (*bot, error) {
+func newBot(token string, chatID int64, s storage.Interface) (*bot, error) {
 	api, err := tg.NewBotAPI(token)
 	if err != nil {
 		return nil, err
 	}
 	log.Println("INFO", "Authorized as", api.Self.UserName)
-	return &bot{api: api, chatID: chatID, year: y}, nil
+	return &bot{api: api, chatID: chatID, s: s}, nil
 }
 
 func (b *bot) send(e models.Event) error {
@@ -43,7 +44,12 @@ func (b *bot) serve() {
 		if t.Round(time.Hour).Hour() != 9 { // run once a day between 8:30 and 9:29
 			continue
 		}
-		for _, e := range b.year.today() {
+		events, err := storage.Today(b.s)
+		if err != nil {
+			log.Println("ERROR", err)
+			continue
+		}
+		for _, e := range events {
 			if err := b.send(e); err != nil {
 				log.Println("ERROR", err)
 			}
@@ -98,9 +104,12 @@ func (b *bot) handleCommand(update tg.Update) error {
 	switch update.Message.Command() {
 	case "next":
 		text := format.MsgNoEvents
-		m, d, events := b.year.next()
+		events, err := storage.Next(b.s)
+		if err != nil {
+			return err
+		}
 		if len(events) > 0 {
-			text = events.Format(m, d)
+			text = events.Format(events[0].Month, events[0].Day)
 		}
 		if _, err := b.api.Send(tg.NewMessage(b.chatID, text)); err != nil {
 			return err
