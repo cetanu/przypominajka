@@ -1,4 +1,4 @@
-package main
+package models
 
 import (
 	"errors"
@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"git.sr.ht/~tymek/przypominajka/format"
 	"gopkg.in/yaml.v3"
 )
 
@@ -16,26 +17,26 @@ var (
 	errInvalidEventType   = errors.New("invalid event type")
 )
 
-type events []event
+type Events []Event
 
-func (ev events) format(month time.Month, day int) string {
+func (ev Events) Format(month time.Month, day int) string {
 	lines := make([]string, len(ev))
 	for i, e := range ev {
-		lines[i] = fmt.Sprintf(formatListLine, day, month, e.format(true))
+		lines[i] = fmt.Sprintf(format.ListLine, day, month, e.Format(true))
 	}
 	return strings.Join(lines, "\n")
 }
 
-type event struct {
+type Event struct {
 	Name    string    `yaml:"name"`
 	Names   [2]string `yaml:"names"`
 	Surname string    `yaml:"surname"`
 	Type    eventType `yaml:"type"`
 }
 
-var _ yaml.Unmarshaler = (*event)(nil)
+var _ yaml.Unmarshaler = (*Event)(nil)
 
-func (e *event) UnmarshalYAML(value *yaml.Node) error {
+func (e *Event) UnmarshalYAML(value *yaml.Node) error {
 	s := struct {
 		Name    string    `yaml:"name"`
 		Names   [2]string `yaml:"names"`
@@ -46,33 +47,33 @@ func (e *event) UnmarshalYAML(value *yaml.Node) error {
 		return err
 	}
 	*e = s
-	return e.validate()
+	return e.Validate()
 }
 
-func (e event) format(list bool) string {
+func (e Event) Format(list bool) string {
 	switch {
 	case e.Name != "" && e.Surname == "" && !list:
-		return fmt.Sprintf(formatSingular, e.Name, e.Type)
+		return fmt.Sprintf(format.Singular, e.Name, e.Type)
 	case e.Name != "" && e.Surname == "":
-		return fmt.Sprintf(formatListSingular, e.Name, e.Type)
+		return fmt.Sprintf(format.ListSingular, e.Name, e.Type)
 	case e.Name != "" && e.Surname != "" && !list:
-		return fmt.Sprintf(formatSingularSurname, e.Name, e.Surname, e.Type)
+		return fmt.Sprintf(format.SingularSurname, e.Name, e.Surname, e.Type)
 	case e.Name != "" && e.Surname != "":
-		return fmt.Sprintf(formatListSingularSurname, e.Name, e.Surname, e.Type)
+		return fmt.Sprintf(format.ListSingularSurname, e.Name, e.Surname, e.Type)
 		// Plural
 	case e.Surname == "" && !list:
-		return fmt.Sprintf(formatMessagePlural, e.Names[0], e.Names[1], e.Type)
+		return fmt.Sprintf(format.MessagePlural, e.Names[0], e.Names[1], e.Type)
 	case e.Surname == "" && list:
-		return fmt.Sprintf(formatListMessagePlural, e.Names[0], e.Names[1], e.Type)
+		return fmt.Sprintf(format.ListMessagePlural, e.Names[0], e.Names[1], e.Type)
 	case e.Surname != "" && !list:
-		return fmt.Sprintf(formatMessagePluralSurname, e.Names[0], e.Names[1], e.Surname, e.Type)
+		return fmt.Sprintf(format.MessagePluralSurname, e.Names[0], e.Names[1], e.Surname, e.Type)
 	case e.Surname != "" && list:
-		return fmt.Sprintf(formatListMessagePluralSurname, e.Names[0], e.Names[1], e.Surname, e.Type)
+		return fmt.Sprintf(format.ListMessagePluralSurname, e.Names[0], e.Names[1], e.Surname, e.Type)
 	}
 	return ""
 }
 
-func (e event) validate() error {
+func (e Event) Validate() error {
 	if e.Name == "" && (e.Names[0] == "" && e.Names[1] == "") {
 		return errMissingNameOrNames
 	}

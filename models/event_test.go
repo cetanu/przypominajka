@@ -1,4 +1,4 @@
-package main
+package models
 
 import (
 	"strconv"
@@ -7,17 +7,17 @@ import (
 
 func TestValidate(t *testing.T) {
 	tests := []struct {
-		e        event
+		e        Event
 		expected error
 	}{
 		{
-			event{
+			Event{
 				Type: birthday,
 			},
 			errMissingNameOrNames,
 		},
 		{
-			event{
+			Event{
 				Name:  "John",
 				Names: [2]string{"John"},
 				Type:  birthday,
@@ -25,7 +25,7 @@ func TestValidate(t *testing.T) {
 			errNameOrNames,
 		},
 		{
-			event{
+			Event{
 				Name:  "John",
 				Names: [2]string{"John", "Jane"},
 				Type:  birthday,
@@ -33,28 +33,28 @@ func TestValidate(t *testing.T) {
 			errNameOrNames,
 		},
 		{
-			event{
+			Event{
 				Names: [2]string{"John"},
 				Type:  birthday,
 			},
 			errNamesArePair,
 		},
 		{
-			event{
+			Event{
 				Names: [2]string{"John", "Jane"},
 				Type:  "asdf",
 			},
 			errInvalidEventType,
 		},
 		{
-			event{
+			Event{
 				Name: "John",
 				Type: birthday,
 			},
 			nil,
 		},
 		{
-			event{
+			Event{
 				Names: [2]string{"John", "Jane"},
 				Type:  wedding,
 			},
@@ -64,7 +64,7 @@ func TestValidate(t *testing.T) {
 
 	for i, tt := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			if err := tt.e.validate(); err != tt.expected {
+			if err := tt.e.Validate(); err != tt.expected {
 				t.Errorf("expected %s, got %s", tt.expected, err)
 			}
 		})

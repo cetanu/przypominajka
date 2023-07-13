@@ -5,6 +5,8 @@ import (
 	"log"
 	"time"
 
+	"git.sr.ht/~tymek/przypominajka/format"
+	"git.sr.ht/~tymek/przypominajka/models"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -25,8 +27,8 @@ func newBot(token string, chatID int64, y year) (*bot, error) {
 	return &bot{api: api, chatID: chatID, year: y}, nil
 }
 
-func (b *bot) send(e event) error {
-	msg := tg.NewMessage(b.chatID, e.format(false))
+func (b *bot) send(e models.Event) error {
+	msg := tg.NewMessage(b.chatID, e.Format(false))
 	msg.ReplyMarkup = tg.NewInlineKeyboardMarkup(
 		tg.NewInlineKeyboardRow(
 			tg.NewInlineKeyboardButtonData("Done", dataDone),
@@ -83,7 +85,7 @@ func (b *bot) handleCallback(update tg.Update) error {
 }
 
 func (b *bot) callbackDone(cq *tg.CallbackQuery) error {
-	edit := tg.NewEditMessageText(b.chatID, cq.Message.MessageID, fmt.Sprintf(msgFormatDone, cq.From.UserName, cq.Message.Text))
+	edit := tg.NewEditMessageText(b.chatID, cq.Message.MessageID, fmt.Sprintf(format.MsgDone, cq.From.UserName, cq.Message.Text))
 	edit.ParseMode = tg.ModeMarkdown
 	_, err := b.api.Send(edit)
 	return fmt.Errorf("failed to edit message: %w", err)
@@ -95,10 +97,10 @@ func (b *bot) handleCommand(update tg.Update) error {
 	// <command>@<bot_name> matches.
 	switch update.Message.Command() {
 	case "next":
-		text := msgFormatNoEvents
+		text := format.MsgNoEvents
 		m, d, events := b.year.next()
 		if len(events) > 0 {
-			text = events.format(m, d)
+			text = events.Format(m, d)
 		}
 		if _, err := b.api.Send(tg.NewMessage(b.chatID, text)); err != nil {
 			return err

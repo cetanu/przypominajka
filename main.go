@@ -83,7 +83,7 @@ func main() {
 				fmt.Println("No events found")
 				return
 			}
-			fmt.Println(next.format(month, day))
+			fmt.Println(next.Format(month, day))
 		},
 	}
 
