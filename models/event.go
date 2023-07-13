@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"git.sr.ht/~tymek/przypominajka/format"
 )
 
 type Events []Event
@@ -12,7 +14,7 @@ var _ fmt.Stringer = Events(nil)
 
 func (ev Events) String() string {
 	if len(ev) == 0 {
-		return formatNoEvents
+		return format.NoEvents
 	}
 	lines := make([]string, len(ev))
 	for i, e := range ev {
@@ -34,25 +36,25 @@ func (e Event) Format(list bool) string {
 	var result string
 	switch {
 	case e.Name != "" && e.Surname == "" && !list:
-		result = fmt.Sprintf(formatSingular, e.Name, e.Type)
+		result = fmt.Sprintf(format.Singular, e.Name, e.Type)
 	case e.Name != "" && e.Surname == "" && list:
-		result = fmt.Sprintf(formatListSingular, e.Name, e.Type)
+		result = fmt.Sprintf(format.ListSingular, e.Name, e.Type)
 	case e.Name != "" && e.Surname != "" && !list:
-		result = fmt.Sprintf(formatSingularSurname, e.Name, e.Surname, e.Type)
+		result = fmt.Sprintf(format.SingularSurname, e.Name, e.Surname, e.Type)
 	case e.Name != "" && e.Surname != "" && list:
-		result = fmt.Sprintf(formatListSingularSurname, e.Name, e.Surname, e.Type)
+		result = fmt.Sprintf(format.ListSingularSurname, e.Name, e.Surname, e.Type)
 	// Plural
 	case e.Surname == "" && !list:
-		result = fmt.Sprintf(formatMessagePlural, e.Names[0], e.Names[1], e.Type)
+		result = fmt.Sprintf(format.Plural, e.Names[0], e.Names[1], e.Type)
 	case e.Surname == "" && list:
-		result = fmt.Sprintf(formatListMessagePlural, e.Names[0], e.Names[1], e.Type)
+		result = fmt.Sprintf(format.ListPlural, e.Names[0], e.Names[1], e.Type)
 	case e.Surname != "" && !list:
-		result = fmt.Sprintf(formatMessagePluralSurname, e.Names[0], e.Names[1], e.Surname, e.Type)
+		result = fmt.Sprintf(format.PluralSurname, e.Names[0], e.Names[1], e.Surname, e.Type)
 	case e.Surname != "" && list:
-		result = fmt.Sprintf(formatListMessagePluralSurname, e.Names[0], e.Names[1], e.Surname, e.Type)
+		result = fmt.Sprintf(format.ListPluralSurname, e.Names[0], e.Names[1], e.Surname, e.Type)
 	}
 	if list {
-		result = fmt.Sprintf(formatListLine, e.Day, e.Month, result)
+		result = fmt.Sprintf(format.ListLine, e.Day, e.Month, result)
 	}
 	return result
 }

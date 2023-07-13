@@ -2,6 +2,8 @@ package models
 
 import (
 	"fmt"
+
+	"git.sr.ht/~tymek/przypominajka/format"
 )
 
 const (
@@ -17,11 +19,11 @@ var _ fmt.Stringer = EventType("")
 func (et EventType) String() string {
 	switch et {
 	case Birthday:
-		return formatBirthday
+		return format.Birthday
 	case Nameday:
-		return formatNameday
+		return format.Nameday
 	case Wedding:
-		return formatWeddingAnniversary
+		return format.WeddingAnniversary
 	}
 	return string(et)
 }

@@ -91,7 +91,7 @@ func (b *bot) handleCallback(update tg.Update) error {
 }
 
 func (b *bot) callbackDone(cq *tg.CallbackQuery) error {
-	edit := tg.NewEditMessageText(b.chatID, cq.Message.MessageID, fmt.Sprintf(format.MsgDone, cq.From.UserName, cq.Message.Text))
+	edit := tg.NewEditMessageText(b.chatID, cq.Message.MessageID, fmt.Sprintf(format.MessageDone, cq.From.UserName, cq.Message.Text))
 	edit.ParseMode = tg.ModeMarkdown
 	_, err := b.api.Send(edit)
 	return fmt.Errorf("failed to edit message: %w", err)
