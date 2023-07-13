@@ -91,13 +91,14 @@ func main() {
 	cmdServe := &cobra.Command{
 		Use:   "bot",
 		Short: "Start Telegram bot to serve events and listen for updates",
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			bot, err := newBot(token, chatID, s)
 			if err != nil {
-				log.Fatalln("FATAL", err)
+				return err
 			}
 			go bot.listen()
 			bot.serve()
+			return nil
 		},
 	}
 
