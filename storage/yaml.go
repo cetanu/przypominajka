@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"git.sr.ht/~tymek/przypominajka/models"
+	"github.com/google/go-cmp/cmp"
+	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 )
 
@@ -60,6 +62,29 @@ func (y *YAML) Add(e models.Event) error {
 		y.data[e.Month] = map[int]models.Events{}
 	}
 	y.data[e.Month][e.Day] = append(y.data[e.Month][e.Day], e)
+	return y.write()
+}
+
+func (y *YAML) Remove(e models.Event) error {
+	if _, ok := y.data[e.Month]; !ok {
+		return nil
+	}
+	if _, ok := y.data[e.Month][e.Day]; !ok {
+		return nil
+	}
+	y.data[e.Month][e.Day] = slices.DeleteFunc(y.data[e.Month][e.Day], func(other models.Event) bool {
+		return cmp.Equal(e, other)
+	})
+	if len(y.data[e.Month][e.Day]) == 0 {
+		delete(y.data[e.Month], e.Day)
+	}
+	if len(y.data[e.Month]) == 0 {
+		delete(y.data, e.Month)
+	}
+	return y.write()
+}
+
+func (y *YAML) write() error {
 	b, err := yaml.Marshal(y.data)
 	if err != nil {
 		return err

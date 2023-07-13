@@ -11,6 +11,7 @@ type Interface interface {
 	fmt.Stringer
 	At(t time.Time) (models.Events, error)
 	Add(e models.Event) error
+	Remove(e models.Event) error
 }
 
 func Next(s Interface) (models.Events, error) {
