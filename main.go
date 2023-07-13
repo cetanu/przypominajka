@@ -83,11 +83,7 @@ func main() {
 			if err != nil {
 				return err
 			}
-			text := "No events found"
-			if len(events) > 0 {
-				text = events.Format(events[0].Month, events[0].Day)
-			}
-			fmt.Println(text)
+			fmt.Println(events)
 			return nil
 		},
 	}

@@ -103,15 +103,11 @@ func (b *bot) handleCommand(update tg.Update) error {
 	// <command>@<bot_name> matches.
 	switch update.Message.Command() {
 	case "next":
-		text := format.MsgNoEvents
 		events, err := storage.Next(b.s)
 		if err != nil {
 			return err
 		}
-		if len(events) > 0 {
-			text = events.Format(events[0].Month, events[0].Day)
-		}
-		if _, err := b.api.Send(tg.NewMessage(b.chatID, text)); err != nil {
+		if _, err := b.api.Send(tg.NewMessage(b.chatID, events.String())); err != nil {
 			return err
 		}
 	}
