@@ -20,14 +20,14 @@ Description:
   Reminders are written in Polish.
 
 Example events.yaml:
-  january:
+  1: # January
     5:
       - name: "John"
         type: "birthday"
       - name: "Jane"
         surname: "Doe"
         type: "nameday"
-  april:
+  4: # April
     17:
       - names: ["John", "Jane"]
         surname: "Doe"
