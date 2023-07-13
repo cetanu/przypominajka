@@ -30,8 +30,10 @@ VALUES
 CREATE TABLE IF NOT EXISTS `event` (
   `event_id`   TEXT NOT NULL PRIMARY KEY,
   `event_type` TEXT NOT NULL,
+  `year`       INTEGER,
+  `month`      INTEGER NOT NULL,
+  `day`        INTEGER NOT NULL,
   FOREIGN KEY (`event_type`) REFERENCES `event_type` (`event_type`)
-  -- TODO: add data
 );
 
 
@@ -39,7 +41,7 @@ CREATE TABLE IF NOT EXISTS `event` (
 -- Table `chat_event`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `chat_event` (
-  `chat_id` TEXT NOT NULL,
+  `chat_id`  TEXT NOT NULL,
   `event_id` TEXT NOT NULL,
   FOREIGN KEY (`chat_id`) REFERENCES `chat` (`chat_id`),
   FOREIGN KEY (`event_id`) REFERENCES `event` (`event_id`)
@@ -53,7 +55,8 @@ ON `chat_event` (`chat_id`, `event_id`);
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `person` (
   `person_id` TEXT NOT NULL PRIMARY KEY
-  -- TODO: add data
+  `name`      TEXT NOT NULL,
+  `surname`   TEXT
 );
 
 
@@ -61,7 +64,7 @@ CREATE TABLE IF NOT EXISTS `person` (
 -- Table `event_person`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `event_person` (
-  `event_id` TEXT NOT NULL,
+  `event_id`  TEXT NOT NULL,
   `person_id` TEXT NOT NULL,
   FOREIGN KEY (`event_id`) REFERENCES `event` (`event_id`),
   FOREIGN KEY (`person_id`) REFERENCES `person` (`person_id`)
