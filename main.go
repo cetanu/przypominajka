@@ -71,7 +71,7 @@ func main() {
 		Use:   "list",
 		Short: "List all events",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(s) // TODO:
+			fmt.Println(s)
 		},
 	}
 
