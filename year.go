@@ -73,7 +73,7 @@ func readYear(path string) (year, error) {
 	if err := yaml.Unmarshal(b, &config); err != nil {
 		return nil, err
 	}
-	return year{
+	y := year{
 		time.January:   config.January,
 		time.February:  config.February,
 		time.March:     config.March,
@@ -86,5 +86,14 @@ func readYear(path string) (year, error) {
 		time.October:   config.October,
 		time.November:  config.November,
 		time.December:  config.December,
-	}, nil
+	}
+	for m, month := range y {
+		for d, day := range month {
+			for i := range day {
+				y[m][d][i].Month = m
+				y[m][d][i].Day = d
+			}
+		}
+	}
+	return y, nil
 }

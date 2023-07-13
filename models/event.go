@@ -28,20 +28,24 @@ func (ev Events) Format(month time.Month, day int) string {
 }
 
 type Event struct {
-	Name    string    `yaml:"name"`
-	Names   [2]string `yaml:"names"`
-	Surname string    `yaml:"surname"`
-	Type    eventType `yaml:"type"`
+	Name    string     `yaml:"name"`
+	Names   [2]string  `yaml:"names"`
+	Surname string     `yaml:"surname"`
+	Type    eventType  `yaml:"type"`
+	Month   time.Month `yaml:"-"`
+	Day     int        `yaml:"-"`
 }
 
 var _ yaml.Unmarshaler = (*Event)(nil)
 
 func (e *Event) UnmarshalYAML(value *yaml.Node) error {
 	s := struct {
-		Name    string    `yaml:"name"`
-		Names   [2]string `yaml:"names"`
-		Surname string    `yaml:"surname"`
-		Type    eventType `yaml:"type"`
+		Name    string     `yaml:"name"`
+		Names   [2]string  `yaml:"names"`
+		Surname string     `yaml:"surname"`
+		Type    eventType  `yaml:"type"`
+		Month   time.Month `yaml:"-"`
+		Day     int        `yaml:"-"`
 	}{}
 	if err := value.Decode(&s); err != nil {
 		return err
