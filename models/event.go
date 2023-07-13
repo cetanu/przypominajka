@@ -24,9 +24,9 @@ func (ev Events) String() string {
 }
 
 type Event struct {
-	Name    string     `yaml:"name"`
-	Names   [2]string  `yaml:"names"`
-	Surname string     `yaml:"surname"`
+	Name    string     `yaml:"name,omitempty"`
+	Names   *[2]string `yaml:"names,omitempty"`
+	Surname string     `yaml:"surname,omitempty"`
 	Type    EventType  `yaml:"type"`
 	Month   time.Month `yaml:"-"`
 	Day     int        `yaml:"-"`
@@ -60,10 +60,10 @@ func (e Event) Format(list bool) string {
 }
 
 func (e Event) Validate() error {
-	if e.Name == "" && (e.Names[0] == "" && e.Names[1] == "") {
+	if e.Name == "" && (e.Names == nil) {
 		return ErrMissingNameOrNames
 	}
-	if e.Name != "" && (e.Names[0] != "" || e.Names[1] != "") {
+	if e.Name != "" && e.Names != nil {
 		return ErrNameOrNames
 	}
 	if e.Name == "" && (e.Names[0] == "" || e.Names[1] == "") {

@@ -19,7 +19,7 @@ func TestValidate(t *testing.T) {
 		{
 			Event{
 				Name:  "John",
-				Names: [2]string{"John"},
+				Names: &[2]string{"John"},
 				Type:  Birthday,
 			},
 			ErrNameOrNames,
@@ -27,21 +27,21 @@ func TestValidate(t *testing.T) {
 		{
 			Event{
 				Name:  "John",
-				Names: [2]string{"John", "Jane"},
+				Names: &[2]string{"John", "Jane"},
 				Type:  Birthday,
 			},
 			ErrNameOrNames,
 		},
 		{
 			Event{
-				Names: [2]string{"John"},
+				Names: &[2]string{"John"},
 				Type:  Birthday,
 			},
 			ErrNamesArePair,
 		},
 		{
 			Event{
-				Names: [2]string{"John", "Jane"},
+				Names: &[2]string{"John", "Jane"},
 				Type:  "asdf",
 			},
 			ErrInvalidEventType,
@@ -55,7 +55,7 @@ func TestValidate(t *testing.T) {
 		},
 		{
 			Event{
-				Names: [2]string{"John", "Jane"},
+				Names: &[2]string{"John", "Jane"},
 				Type:  Wedding,
 			},
 			nil,

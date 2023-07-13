@@ -54,3 +54,15 @@ func (y *YAML) String() string {
 func (y *YAML) At(t time.Time) (models.Events, error) {
 	return y.data[t.Month()][t.Day()], nil
 }
+
+func (y *YAML) Add(e models.Event) error {
+	if _, ok := y.data[e.Month]; !ok {
+		y.data[e.Month] = map[int]models.Events{}
+	}
+	y.data[e.Month][e.Day] = append(y.data[e.Month][e.Day], e)
+	b, err := yaml.Marshal(y.data)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(y.path, b, 0o644)
+}
