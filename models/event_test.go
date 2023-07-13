@@ -1,64 +1,62 @@
-package storage
+package models
 
 import (
 	"strconv"
 	"testing"
-
-	"git.sr.ht/~tymek/przypominajka/models"
 )
 
 func TestValidate(t *testing.T) {
 	tests := []struct {
-		e        models.Event
+		e        Event
 		expected error
 	}{
 		{
-			models.Event{
-				Type: models.Birthday,
+			Event{
+				Type: Birthday,
 			},
-			errMissingNameOrNames,
+			ErrMissingNameOrNames,
 		},
 		{
-			models.Event{
+			Event{
 				Name:  "John",
 				Names: [2]string{"John"},
-				Type:  models.Birthday,
+				Type:  Birthday,
 			},
-			errNameOrNames,
+			ErrNameOrNames,
 		},
 		{
-			models.Event{
+			Event{
 				Name:  "John",
 				Names: [2]string{"John", "Jane"},
-				Type:  models.Birthday,
+				Type:  Birthday,
 			},
-			errNameOrNames,
+			ErrNameOrNames,
 		},
 		{
-			models.Event{
+			Event{
 				Names: [2]string{"John"},
-				Type:  models.Birthday,
+				Type:  Birthday,
 			},
-			errNamesArePair,
+			ErrNamesArePair,
 		},
 		{
-			models.Event{
+			Event{
 				Names: [2]string{"John", "Jane"},
 				Type:  "asdf",
 			},
-			errInvalidEventType,
+			ErrInvalidEventType,
 		},
 		{
-			models.Event{
+			Event{
 				Name: "John",
-				Type: models.Birthday,
+				Type: Birthday,
 			},
 			nil,
 		},
 		{
-			models.Event{
+			Event{
 				Names: [2]string{"John", "Jane"},
-				Type:  models.Wedding,
+				Type:  Wedding,
 			},
 			nil,
 		},
@@ -66,7 +64,7 @@ func TestValidate(t *testing.T) {
 
 	for i, tt := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			if err := validate(tt.e); err != tt.expected {
+			if err := tt.e.Validate(); err != tt.expected {
 				t.Errorf("expected '%s', got '%s'", tt.expected, err)
 			}
 		})

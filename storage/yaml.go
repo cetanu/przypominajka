@@ -1,20 +1,12 @@
 package storage
 
 import (
-	"errors"
 	"os"
 	"strings"
 	"time"
 
 	"git.sr.ht/~tymek/przypominajka/models"
 	"gopkg.in/yaml.v3"
-)
-
-var (
-	errMissingNameOrNames = errors.New("'name' or 'names' must be provided")
-	errNameOrNames        = errors.New("'name' is mutually exclusive with 'names'")
-	errNamesArePair       = errors.New("'names' must have two elements")
-	errInvalidEventType   = errors.New("invalid event type")
 )
 
 type YAML map[time.Month]map[int]models.Events
@@ -62,7 +54,7 @@ func NewYAML(path string) (YAML, error) {
 			for i, e := range day {
 				y[m][d][i].Month = m
 				y[m][d][i].Day = d
-				if err := validate(e); err != nil {
+				if err := e.Validate(); err != nil {
 					return nil, err
 				}
 			}
@@ -85,22 +77,4 @@ func (y YAML) String() string {
 
 func (y YAML) At(t time.Time) (models.Events, error) {
 	return y[t.Month()][t.Day()], nil
-}
-
-func validate(e models.Event) error {
-	if e.Name == "" && (e.Names[0] == "" && e.Names[1] == "") {
-		return errMissingNameOrNames
-	}
-	if e.Name != "" && (e.Names[0] != "" || e.Names[1] != "") {
-		return errNameOrNames
-	}
-	if e.Name == "" && (e.Names[0] == "" || e.Names[1] == "") {
-		return errNamesArePair
-	}
-	switch e.Type {
-	case models.Birthday, models.Nameday, models.Wedding:
-	default:
-		return errInvalidEventType
-	}
-	return nil
 }

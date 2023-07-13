@@ -56,3 +56,21 @@ func (e Event) Format(list bool) string {
 	}
 	return result
 }
+
+func (e Event) Validate() error {
+	if e.Name == "" && (e.Names[0] == "" && e.Names[1] == "") {
+		return ErrMissingNameOrNames
+	}
+	if e.Name != "" && (e.Names[0] != "" || e.Names[1] != "") {
+		return ErrNameOrNames
+	}
+	if e.Name == "" && (e.Names[0] == "" || e.Names[1] == "") {
+		return ErrNamesArePair
+	}
+	switch e.Type {
+	case Birthday, Nameday, Wedding:
+	default:
+		return ErrInvalidEventType
+	}
+	return nil
+}
