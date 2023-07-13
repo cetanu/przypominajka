@@ -18,49 +18,11 @@ func NewYAML(path string) (YAML, error) {
 	if err != nil {
 		return nil, err
 	}
-	var config struct {
-		January   map[int]models.Events `yaml:"january"`
-		February  map[int]models.Events `yaml:"february"`
-		March     map[int]models.Events `yaml:"march"`
-		April     map[int]models.Events `yaml:"april"`
-		May       map[int]models.Events `yaml:"may"`
-		June      map[int]models.Events `yaml:"june"`
-		July      map[int]models.Events `yaml:"july"`
-		August    map[int]models.Events `yaml:"august"`
-		September map[int]models.Events `yaml:"september"`
-		October   map[int]models.Events `yaml:"october"`
-		November  map[int]models.Events `yaml:"november"`
-		December  map[int]models.Events `yaml:"december"`
-	}
-	if err := yaml.Unmarshal(b, &config); err != nil {
+	var dto yamlDTO
+	if err := yaml.Unmarshal(b, &dto); err != nil {
 		return nil, err
 	}
-	y := YAML{
-		time.January:   config.January,
-		time.February:  config.February,
-		time.March:     config.March,
-		time.April:     config.April,
-		time.May:       config.May,
-		time.June:      config.June,
-		time.July:      config.July,
-		time.August:    config.August,
-		time.September: config.September,
-		time.October:   config.October,
-		time.November:  config.November,
-		time.December:  config.December,
-	}
-	for m, month := range y {
-		for d, day := range month {
-			for i, e := range day {
-				y[m][d][i].Month = m
-				y[m][d][i].Day = d
-				if err := e.Validate(); err != nil {
-					return nil, err
-				}
-			}
-		}
-	}
-	return y, nil
+	return dtoToYAML(dto)
 }
 
 func (y YAML) String() string {
@@ -77,4 +39,48 @@ func (y YAML) String() string {
 
 func (y YAML) At(t time.Time) (models.Events, error) {
 	return y[t.Month()][t.Day()], nil
+}
+
+type yamlDTO struct {
+	January   map[int]models.Events `yaml:"january"`
+	February  map[int]models.Events `yaml:"february"`
+	March     map[int]models.Events `yaml:"march"`
+	April     map[int]models.Events `yaml:"april"`
+	May       map[int]models.Events `yaml:"may"`
+	June      map[int]models.Events `yaml:"june"`
+	July      map[int]models.Events `yaml:"july"`
+	August    map[int]models.Events `yaml:"august"`
+	September map[int]models.Events `yaml:"september"`
+	October   map[int]models.Events `yaml:"october"`
+	November  map[int]models.Events `yaml:"november"`
+	December  map[int]models.Events `yaml:"december"`
+}
+
+func dtoToYAML(dto yamlDTO) (YAML, error) {
+	y := YAML{
+		time.January:   dto.January,
+		time.February:  dto.February,
+		time.March:     dto.March,
+		time.April:     dto.April,
+		time.May:       dto.May,
+		time.June:      dto.June,
+		time.July:      dto.July,
+		time.August:    dto.August,
+		time.September: dto.September,
+		time.October:   dto.October,
+		time.November:  dto.November,
+		time.December:  dto.December,
+	}
+	for m, month := range y {
+		for d, day := range month {
+			for i, e := range day {
+				y[m][d][i].Month = m
+				y[m][d][i].Day = d
+				if err := e.Validate(); err != nil {
+					return nil, err
+				}
+			}
+		}
+	}
+	return y, nil
 }
