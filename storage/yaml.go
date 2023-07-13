@@ -1,4 +1,4 @@
-package yaml
+package storage
 
 import (
 	"errors"
@@ -9,7 +9,7 @@ import (
 
 type YAML map[time.Month]map[int]models.Events
 
-var _ models.Storage = YAML{}
+var _ Interface = YAML{}
 
 func NewYAML() (YAML, error) {
 	return nil, errors.New("not implemented")

@@ -7,18 +7,19 @@ import (
 	"time"
 
 	"git.sr.ht/~tymek/przypominajka/models"
+	"git.sr.ht/~tymek/przypominajka/storage"
 	"gopkg.in/yaml.v3"
 )
 
 type year map[time.Month]map[int]models.Events
 
 var (
-	_ fmt.Stringer   = year{}
-	_ models.Storage = year{}
+	_ fmt.Stringer      = year{}
+	_ storage.Interface = year{}
 )
 
 func (y year) next() (time.Month, int, models.Events) {
-	events, _ := models.Next(y)
+	events, _ := storage.Next(y)
 	if len(events) > 0 {
 		return events[0].Month, events[0].Day, events
 	}

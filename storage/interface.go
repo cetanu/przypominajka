@@ -1,17 +1,16 @@
-package models
+package storage
 
 import (
-	"errors"
 	"time"
+
+	"git.sr.ht/~tymek/przypominajka/models"
 )
 
-var ErrNotFound = errors.New("not found")
-
-type Storage interface {
-	At(t time.Time) (Events, error)
+type Interface interface {
+	At(t time.Time) (models.Events, error)
 }
 
-func Next(s Storage) (Events, error) {
+func Next(s Interface) (models.Events, error) {
 	now := time.Now()
 	nextDay := now.AddDate(0, 0, 1)
 	nextYear := nextDay.AddDate(1, 0, 0)
@@ -24,5 +23,5 @@ func Next(s Storage) (Events, error) {
 			return events, nil
 		}
 	}
-	return nil, ErrNotFound
+	return nil, models.ErrNotFound
 }
