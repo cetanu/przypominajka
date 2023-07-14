@@ -103,7 +103,7 @@ func (b *Bot) handle(update tg.Update) error {
 }
 
 func (b *Bot) handleCallbackNotifyDone(cq *tg.CallbackQuery) error {
-	edit := tg.NewEditMessageText(b.chatID, cq.Message.MessageID, fmt.Sprintf(format.MessageDone, cq.From.UserName, cq.Message.Text))
+	edit := tg.NewEditMessageText(cq.Message.Chat.ID, cq.Message.MessageID, fmt.Sprintf(format.MessageDone, cq.From.UserName, cq.Message.Text))
 	edit.ParseMode = tg.ModeMarkdown
 	_, err := b.api.Send(edit)
 	return fmt.Errorf("failed to edit message: %w", err)
@@ -114,7 +114,7 @@ func (b *Bot) handleCommandNext(update tg.Update) error {
 	if err != nil {
 		return err
 	}
-	return b.send(tg.NewMessage(b.chatID, events.String()))
+	return b.send(tg.NewMessage(update.FromChat().ID, events.String()))
 }
 
 func (b *Bot) send(msg tg.MessageConfig) error {
