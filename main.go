@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"git.sr.ht/~tymek/przypominajka/bot"
 	"git.sr.ht/~tymek/przypominajka/storage"
 	"github.com/spf13/cobra"
 )
@@ -92,13 +93,7 @@ func main() {
 		Use:   "bot",
 		Short: "Start Telegram bot to serve events and listen for updates",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			bot, err := newBot(token, chatID, s)
-			if err != nil {
-				return err
-			}
-			go bot.listen()
-			bot.serve()
-			return nil
+			return bot.ListenAndServe(token, chatID, s)
 		},
 	}
 
