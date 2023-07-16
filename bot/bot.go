@@ -3,6 +3,7 @@ package bot
 import (
 	"fmt"
 	"log"
+	"runtime/debug"
 	"time"
 
 	"git.sr.ht/~tymek/przypominajka/bot/wizard"
@@ -59,6 +60,12 @@ func (b *Bot) Listen() {
 	u.Timeout = 60
 	for update := range b.api.GetUpdatesChan(u) {
 		go func(update tg.Update) {
+			defer func() {
+				if r := recover(); r != nil {
+					fmt.Println("PANIC", r)
+					debug.PrintStack()
+				}
+			}()
 			if err := b.handle(update); err != nil {
 				log.Println("ERROR", err)
 			}
