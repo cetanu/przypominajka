@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"git.sr.ht/~tymek/przypominajka/bot/wizard"
 	"git.sr.ht/~tymek/przypominajka/format"
 	"git.sr.ht/~tymek/przypominajka/models"
 	"git.sr.ht/~tymek/przypominajka/storage"
@@ -14,18 +15,23 @@ import (
 const dataNotifyDone = "done"
 
 type Bot struct {
-	api    *tg.BotAPI
-	chatID int64
-	s      storage.Interface
+	api     *tg.BotAPI
+	chatID  int64
+	s       storage.Interface
+	wizards map[string]wizard.Interface
 }
 
-func New(token string, chatID int64, s storage.Interface) (*Bot, error) {
+func New(token string, chatID int64, s storage.Interface, wizards ...wizard.Interface) (*Bot, error) {
 	api, err := tg.NewBotAPI(token)
 	if err != nil {
 		return nil, err
 	}
 	log.Println("INFO", "Authorized as", api.Self.UserName)
-	return &Bot{api: api, chatID: chatID, s: s}, nil
+	m := make(map[string]wizard.Interface, len(wizards))
+	for _, w := range wizards {
+		m[w.Name()] = w
+	}
+	return &Bot{api: api, chatID: chatID, s: s, wizards: m}, nil
 }
 
 func ListenAndServe(token string, chatID int64, s storage.Interface) error {
@@ -94,9 +100,14 @@ func (b *Bot) handle(update tg.Update) error {
 		// NOTE: if another bot has /next command, then this will be triggered.
 		// To prevent this behavior, we can CommandWithAt() and check whether
 		// <command>@<bot_name> matches.
-		switch update.Message.Command() {
+		switch cmd := update.Message.Command(); cmd {
 		case "next":
 			return b.handleCommandNext(update)
+		default:
+			if w, ok := b.wizards[update.Message.Command()]; ok {
+				wizard.ResetAfter(w, 5*time.Minute) // FIXME: this could interrupt adding subsequent events
+				return b.send(w.Start())
+			}
 		}
 	}
 	return nil

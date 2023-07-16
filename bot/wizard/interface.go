@@ -11,6 +11,8 @@ import (
 var ErrDone = errors.New("wizard: done")
 
 type Interface interface {
+	Name() string
+	Start() tg.Chattable
 	Next(s storage.Interface, update tg.Update) (tg.Chattable, error)
 	Reset()
 }

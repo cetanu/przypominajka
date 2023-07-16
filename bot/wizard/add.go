@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	addStepMonth int = iota
+	addStepStart int = iota
+	addStepMonth
 	addStepDay
 	addStepType
 	addStepName
@@ -23,6 +24,14 @@ type Add struct {
 }
 
 var _ Interface = (*Add)(nil)
+
+func (a *Add) Name() string {
+	return "add"
+}
+
+func (a *Add) Start() tg.Chattable {
+	return nil
+}
 
 func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, error) {
 	switch a.step {
@@ -39,6 +48,6 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, error) 
 }
 
 func (a *Add) Reset() {
-	a.step = addStepMonth
+	a.step = addStepStart
 	a.e = models.Event{}
 }
