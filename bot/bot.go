@@ -114,7 +114,6 @@ func (b *Bot) handle(update tg.Update) error {
 			return b.handleCommandNext(update)
 		default:
 			if w, ok := b.wizards[update.Message.Command()]; ok {
-				wizard.ResetAfter(w, 5*time.Minute) // FIXME: this could interrupt adding subsequent events
 				return b.send(w.Start())
 			}
 		}
