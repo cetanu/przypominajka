@@ -7,6 +7,8 @@ import (
 	tg "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
+const CallbackSep = ":"
+
 var ErrDone = errors.New("wizard: done")
 
 type Interface interface {

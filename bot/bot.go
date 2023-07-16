@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"runtime/debug"
+	"strings"
 	"time"
 
 	"git.sr.ht/~tymek/przypominajka/bot/wizard"
@@ -100,9 +101,23 @@ func (b *Bot) handle(update tg.Update) error {
 		if _, err := b.api.Request(tg.NewCallback(update.CallbackQuery.ID, update.CallbackQuery.Data)); err != nil {
 			return err
 		}
-		switch update.CallbackQuery.Data {
+		switch data := update.CallbackQuery.Data; data {
 		case dataNotifyDone:
 			return b.handleCallbackNotifyDone(update.CallbackQuery)
+		default:
+			name, _, ok := strings.Cut(update.CallbackData(), wizard.CallbackSep)
+			if !ok {
+				return nil
+			}
+			w, ok := b.wizards[name]
+			if !ok {
+				return nil
+			}
+			msg, err := w.Next(b.s, update)
+			if err != nil {
+				return err
+			}
+			return b.send(msg)
 		}
 
 	case update.Message.IsCommand():
