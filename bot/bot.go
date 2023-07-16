@@ -137,6 +137,10 @@ func (b *Bot) handleCommandNext(update tg.Update) error {
 }
 
 func (b *Bot) send(c tg.Chattable) error {
+	if c == nil {
+		log.Println("WARN", "nil message")
+		return nil
+	}
 	if _, err := b.api.Send(c); err != nil {
 		return fmt.Errorf("failed to send message: %w", err)
 	}
