@@ -117,8 +117,8 @@ func (b *Bot) handleCommandNext(update tg.Update) error {
 	return b.send(tg.NewMessage(update.FromChat().ID, events.String()))
 }
 
-func (b *Bot) send(msg tg.MessageConfig) error {
-	if _, err := b.api.Send(msg); err != nil {
+func (b *Bot) send(c tg.Chattable) error {
+	if _, err := b.api.Send(c); err != nil {
 		return fmt.Errorf("failed to send message: %w", err)
 	}
 	return nil
