@@ -58,9 +58,11 @@ func (b *Bot) Listen() {
 	u := tg.NewUpdate(0)
 	u.Timeout = 60
 	for update := range b.api.GetUpdatesChan(u) {
-		if err := b.handle(update); err != nil {
-			log.Println("ERROR", err)
-		}
+		go func(update tg.Update) {
+			if err := b.handle(update); err != nil {
+				log.Println("ERROR", err)
+			}
+		}(update)
 	}
 }
 
