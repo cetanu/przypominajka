@@ -110,6 +110,10 @@ func (b *Bot) handle(update tg.Update) error {
 		// To prevent this behavior, we can CommandWithAt() and check whether
 		// <command>@<bot_name> matches.
 		switch cmd := update.Message.Command(); cmd {
+		case "abort":
+			for _, w := range b.wizards {
+				w.Reset()
+			}
 		case "next":
 			return b.handleCommandNext(update)
 		default:
