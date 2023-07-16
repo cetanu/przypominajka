@@ -1,7 +1,9 @@
 package wizard
 
 import (
+	"context"
 	"errors"
+	"time"
 
 	"git.sr.ht/~tymek/przypominajka/models"
 	"git.sr.ht/~tymek/przypominajka/storage"
@@ -19,8 +21,9 @@ const (
 )
 
 type Add struct {
-	step int
-	e    models.Event
+	step        int
+	e           models.Event
+	cancelReset context.CancelFunc
 }
 
 var _ Interface = (*Add)(nil)
@@ -30,6 +33,15 @@ func (a *Add) Name() string {
 }
 
 func (a *Add) Start() tg.Chattable {
+	ctx, cancel := context.WithCancel(context.Background())
+	a.cancelReset = cancel
+	go func() {
+		select {
+		case <-ctx.Done():
+		case <-time.After(30 * time.Second):
+			a.Reset()
+		}
+	}()
 	return nil
 }
 
@@ -48,6 +60,10 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, error) 
 }
 
 func (a *Add) Reset() {
+	if cr := a.cancelReset; cr != nil {
+		cr()
+	}
 	a.step = addStepStart
 	a.e = models.Event{}
+	a.cancelReset = nil
 }
