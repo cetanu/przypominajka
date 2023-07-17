@@ -36,6 +36,7 @@ func (a *Add) Name() string {
 }
 
 func (a *Add) Start(update tg.Update) tg.Chattable {
+	a.Reset()
 	ctx, cancel := context.WithCancel(context.Background())
 	a.cancelReset = cancel
 	go func() {
