@@ -1,3 +1,4 @@
+<!-- FIXME: update docs, especially commands -->
 # przypominajka
 
 przypominajka runs a Telegram bot to send notifications about birthdays,
