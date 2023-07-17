@@ -97,12 +97,15 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, error) 
 		msg.ReplyMarkup = addKeyboardTypes()
 		return msg, nil
 	case addStepType:
-		eventType, err := parseCallbackData(update.CallbackData(), a, addCallbackStepType)
+		et, err := parseCallbackData(update.CallbackData(), a, addCallbackStepType)
 		if err != nil {
 			return nil, err
 		}
-		log.Println("DEBUG", "type", eventType)
+		a.e.Type = models.EventType(et)
+		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, format.MessageAddStepType)
+		return msg, nil
 	case addStepName:
+		// TODO: how to pass typed in messages here?
 	case addStepSurname:
 	case addStepDone:
 		return nil, ErrDone
