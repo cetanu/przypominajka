@@ -5,6 +5,7 @@ import (
 	"log"
 	"runtime/debug"
 	"strings"
+	"sync"
 	"time"
 
 	"git.sr.ht/~tymek/przypominajka/bot/wizard"
@@ -17,10 +18,12 @@ import (
 const dataNotifyDone = "done"
 
 type Bot struct {
+	mu      sync.RWMutex
 	api     *tg.BotAPI
 	chatID  int64
 	s       storage.Interface
 	wizards map[string]wizard.Interface
+	consume wizard.Consume
 }
 
 func New(token string, chatID int64, s storage.Interface, wizards ...wizard.Interface) (*Bot, error) {
@@ -113,11 +116,7 @@ func (b *Bot) handle(update tg.Update) error {
 			if !ok {
 				return nil
 			}
-			msg, err := w.Next(b.s, update)
-			if err != nil {
-				return err
-			}
-			return b.send(msg)
+			return b.runConsume(w.Next, update)
 		}
 
 	case update.Message.IsCommand():
@@ -126,9 +125,11 @@ func (b *Bot) handle(update tg.Update) error {
 		// <command>@<bot_name> matches.
 		switch cmd := update.Message.Command(); cmd {
 		case "abort":
+			b.mu.Lock()
 			for _, w := range b.wizards {
 				w.Reset()
 			}
+			b.mu.Unlock()
 		case "next":
 			return b.handleCommandNext(update)
 		default:
@@ -136,6 +137,9 @@ func (b *Bot) handle(update tg.Update) error {
 				return b.send(w.Start(update))
 			}
 		}
+
+	case update.Message.Text != "":
+		return b.runConsume(b.consume, update)
 	}
 	return nil
 }
@@ -164,4 +168,20 @@ func (b *Bot) send(c tg.Chattable) error {
 		return fmt.Errorf("failed to send message: %w", err)
 	}
 	return nil
+}
+
+func (b *Bot) runConsume(c wizard.Consume, update tg.Update) error {
+	if c == nil {
+		return nil
+	}
+	b.mu.RLock()
+	msg, consume, err := c(b.s, update)
+	b.mu.RUnlock()
+	if err != nil {
+		return err
+	}
+	b.mu.Lock()
+	b.consume = consume
+	b.mu.Unlock()
+	return b.send(msg)
 }

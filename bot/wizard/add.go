@@ -52,13 +52,15 @@ func (a *Add) Start(update tg.Update) tg.Chattable {
 			a.Reset()
 		}
 	}()
-	msg, _ := a.Next(nil, update)
+	msg, _, _ := a.Next(nil, update)
 	return msg
 }
 
+var _ Consume = (*Add)(nil).Next
+
 // TODO: add user error messages
 // TODO: add validation
-func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, error) {
+func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume, error) {
 	defer func() { // FIXME: this probably shouldn't run on error
 		a.step += 1
 	}()
@@ -69,48 +71,48 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, error) 
 	case addStepStart:
 		msg := tg.NewMessage(update.FromChat().ID, format.MessageAddStepStart)
 		msg.ReplyMarkup = addKeyboardMonths
-		return msg, nil
+		return msg, nil, nil
 	case addStepMonth:
 		month, err := parseCallbackData(update.CallbackData(), a, addCallbackStepMonth)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		m, err := strconv.Atoi(month)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		a.e.Month = time.Month(m)
 		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, format.MessageAddStepMonth)
 		msg.ReplyMarkup = addKeyboardDays(a.e.Month)
-		return msg, nil
+		return msg, nil, nil
 	case addStepDay:
 		day, err := parseCallbackData(update.CallbackData(), a, addCallbackStepDay)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		d, err := strconv.Atoi(day)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		a.e.Day = d
 		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, format.MessageAddStepDay)
 		msg.ReplyMarkup = addKeyboardTypes()
-		return msg, nil
+		return msg, nil, nil
 	case addStepType:
 		et, err := parseCallbackData(update.CallbackData(), a, addCallbackStepType)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		a.e.Type = models.EventType(et)
 		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, format.MessageAddStepType)
-		return msg, nil
+		return msg, nil, nil
 	case addStepName:
 		// TODO: how to pass typed in messages here?
 	case addStepSurname:
 	case addStepDone:
-		return nil, ErrDone
+		return nil, nil, ErrDone
 	}
-	return nil, errors.New("unknown wizard step")
+	return nil, nil, errors.New("unknown wizard step")
 }
 
 func (a *Add) Reset() {

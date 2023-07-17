@@ -19,9 +19,11 @@ var (
 type Interface interface {
 	Name() string
 	Start(update tg.Update) tg.Chattable
-	Next(s storage.Interface, update tg.Update) (tg.Chattable, error)
+	Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume, error)
 	Reset()
 }
+
+type Consume func(s storage.Interface, update tg.Update) (tg.Chattable, Consume, error)
 
 func newCallbackData(w Interface, parts ...string) string {
 	return fmt.Sprint(w.Name(), CallbackSep, strings.Join(parts, CallbackSep))
