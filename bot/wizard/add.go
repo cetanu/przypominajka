@@ -14,6 +14,11 @@ import (
 )
 
 const (
+	addCallbackStepMonth = "month"
+	addCallbackStepDay   = "day"
+)
+
+const (
 	addStepStart int = iota
 	addStepMonth
 	addStepDay
@@ -65,7 +70,24 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, error) 
 		msg.ReplyMarkup = addKeyboardMonths
 		return msg, nil
 	case addStepMonth:
+		month, err := parseCallbackData(update.CallbackData(), a, addCallbackStepMonth)
+		if err != nil {
+			return nil, err
+		}
+		m, err := strconv.Atoi(month)
+		if err != nil {
+			return nil, err
+		}
+		a.e.Month = time.Month(m)
+		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, format.MessageAddStepMonth)
+		msg.ReplyMarkup = addKeyboardDays(a.e.Month)
+		return msg, nil
 	case addStepDay:
+		day, err := parseCallbackData(update.CallbackData(), a, addCallbackStepDay)
+		if err != nil {
+			return nil, err
+		}
+		log.Println("DEBUG", "day", day)
 	case addStepType:
 	case addStepName:
 	case addStepSurname:
@@ -108,5 +130,22 @@ var addKeyboardMonths = tg.NewInlineKeyboardMarkup(
 )
 
 func addCallbackMonth(m int) string {
-	return newCallbackData(&Add{}, "month", strconv.Itoa(m))
+	return newCallbackData(&Add{}, addCallbackStepMonth, strconv.Itoa(m))
+}
+
+func addKeyboardDays(m time.Month) *tg.InlineKeyboardMarkup {
+	const nCols = 8 // that's the max Telegram allows for an inline keyboard
+	n := 31
+	switch m {
+	case time.February:
+		n = 29
+	case time.April, time.June, time.September, time.November:
+		n = 30
+	}
+	rows := make([][]tg.InlineKeyboardButton, 4)
+	for i := 0; i < n; i++ {
+		d := strconv.Itoa(i + 1)
+		rows[i/nCols] = append(rows[i/nCols], tg.NewInlineKeyboardButtonData(d, newCallbackData(&Add{}, addCallbackStepDay, d)))
+	}
+	return &tg.InlineKeyboardMarkup{InlineKeyboard: rows}
 }
