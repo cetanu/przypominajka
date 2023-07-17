@@ -133,7 +133,7 @@ func (b *Bot) handle(update tg.Update) error {
 			return b.handleCommandNext(update)
 		default:
 			if w, ok := b.wizards[update.Message.Command()]; ok {
-				return b.send(w.Start())
+				return b.send(w.Start(update))
 			}
 		}
 	}
