@@ -10,4 +10,5 @@ const (
 const (
 	MessageAddStepStart = "Wybierz miesiąc:"
 	MessageAddStepMonth = "Wybierz dzień:"
+	MessageAddStepDay   = "Wybierz rodzaj wydarzenia:"
 )

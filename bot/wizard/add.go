@@ -16,6 +16,7 @@ import (
 const (
 	addCallbackStepMonth = "month"
 	addCallbackStepDay   = "day"
+	addCallbackStepType  = "type"
 )
 
 const (
@@ -87,8 +88,20 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, error) 
 		if err != nil {
 			return nil, err
 		}
-		log.Println("DEBUG", "day", day)
+		d, err := strconv.Atoi(day)
+		if err != nil {
+			return nil, err
+		}
+		a.e.Day = d
+		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, format.MessageAddStepDay)
+		msg.ReplyMarkup = addKeyboardTypes()
+		return msg, nil
 	case addStepType:
+		eventType, err := parseCallbackData(update.CallbackData(), a, addCallbackStepType)
+		if err != nil {
+			return nil, err
+		}
+		log.Println("DEBUG", "type", eventType)
 	case addStepName:
 	case addStepSurname:
 	case addStepDone:
@@ -146,6 +159,14 @@ func addKeyboardDays(m time.Month) *tg.InlineKeyboardMarkup {
 	for i := 0; i < n; i++ {
 		d := strconv.Itoa(i + 1)
 		rows[i/nCols] = append(rows[i/nCols], tg.NewInlineKeyboardButtonData(d, newCallbackData(&Add{}, addCallbackStepDay, d)))
+	}
+	return &tg.InlineKeyboardMarkup{InlineKeyboard: rows}
+}
+
+func addKeyboardTypes() *tg.InlineKeyboardMarkup {
+	rows := make([][]tg.InlineKeyboardButton, 1)
+	for _, et := range models.EventTypes {
+		rows[0] = append(rows[0], tg.NewInlineKeyboardButtonData(et.Format(false), newCallbackData(&Add{}, addCallbackStepType, string(et))))
 	}
 	return &tg.InlineKeyboardMarkup{InlineKeyboard: rows}
 }
