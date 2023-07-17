@@ -9,7 +9,7 @@ import (
 
 const CallbackSep = ":"
 
-var ErrDone = errors.New("wizard: done")
+var ErrDone = errors.New("wizard done")
 
 type Interface interface {
 	Name() string
