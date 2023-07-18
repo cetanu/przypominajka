@@ -127,7 +127,7 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume
 		} else {
 			a.e.Names = (*[2]string)(lines)
 		}
-		msg := tg.NewMessage(update.FromChat().ID, "Wyślij nazwisko:")
+		msg := tg.NewMessage(update.FromChat().ID, format.MessageAddStepName)
 		msg.ReplyMarkup = tg.NewInlineKeyboardMarkup(
 			tg.NewInlineKeyboardRow(
 				tg.NewInlineKeyboardButtonData(format.MarkupButtonSkip, newCallbackData(a, addCallbackStepSurname, "skip")),

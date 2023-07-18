@@ -12,6 +12,7 @@ const (
 	MessageAddStepMonth = "Wybierz dzień:"
 	MessageAddStepDay   = "Wybierz rodzaj wydarzenia:"
 	MessageAddStepType  = "Wyślij jedno imię lub dwa imiona (każde w osobnej linijce)"
+	MessageAddStepName  = "Wyślij nazwisko"
 )
 
 const (
