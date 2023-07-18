@@ -32,8 +32,6 @@ const (
 	addStepDone
 )
 
-// FIXME: I think bot locks are messed up... Maybe this thing should have its own lock?
-// Maybe bot should do write lock on the whole wizard? But when?
 type Add struct {
 	id          string
 	step        int

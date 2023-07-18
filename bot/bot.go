@@ -19,7 +19,7 @@ import (
 const dataNotifyDone = "done"
 
 type Bot struct {
-	mu      sync.RWMutex
+	mu      sync.Mutex
 	api     *tg.BotAPI
 	chatID  int64
 	s       storage.Interface
@@ -172,9 +172,9 @@ func (b *Bot) runConsume(c wizard.Consume, update tg.Update) error {
 	if c == nil {
 		return nil
 	}
-	b.mu.RLock()
+	b.mu.Lock()
 	msg, consume, err := c(b.s, update)
-	b.mu.RUnlock()
+	b.mu.Unlock()
 	if errors.Is(err, wizard.ErrUserError) {
 		log.Println("WARN", err)
 	} else if err != nil {
