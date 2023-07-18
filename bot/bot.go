@@ -106,7 +106,11 @@ func (b *Bot) handle(update tg.Update) error {
 		}
 		switch data := update.CallbackQuery.Data; data {
 		case dataNotifyDone:
-			return b.handleCallbackNotifyDone(update.CallbackQuery)
+			cq := update.CallbackQuery
+			edit := tg.NewEditMessageText(cq.Message.Chat.ID, cq.Message.MessageID, fmt.Sprintf(format.MessageDone, cq.From.UserName, cq.Message.Text))
+			edit.ParseMode = tg.ModeMarkdown
+			_, err := b.api.Send(edit)
+			return fmt.Errorf("failed to edit message: %w", err)
 		default:
 			name, _, ok := strings.Cut(update.CallbackData(), wizard.CallbackSep)
 			if !ok {
@@ -131,9 +135,13 @@ func (b *Bot) handle(update tg.Update) error {
 			}
 			b.mu.Unlock()
 		case "list":
-			return b.handleCommandList(update)
+			return b.send(tg.NewMessage(update.FromChat().ID, b.s.String()))
 		case "next":
-			return b.handleCommandNext(update)
+			events, err := storage.Next(b.s)
+			if err != nil {
+				return err
+			}
+			return b.send(tg.NewMessage(update.FromChat().ID, events.String()))
 		default:
 			if w, ok := b.wizards[update.Message.Command()]; ok {
 				return b.send(w.Start(update))
@@ -144,25 +152,6 @@ func (b *Bot) handle(update tg.Update) error {
 		return b.runConsume(b.consume, update)
 	}
 	return nil
-}
-
-func (b *Bot) handleCallbackNotifyDone(cq *tg.CallbackQuery) error {
-	edit := tg.NewEditMessageText(cq.Message.Chat.ID, cq.Message.MessageID, fmt.Sprintf(format.MessageDone, cq.From.UserName, cq.Message.Text))
-	edit.ParseMode = tg.ModeMarkdown
-	_, err := b.api.Send(edit)
-	return fmt.Errorf("failed to edit message: %w", err)
-}
-
-func (b *Bot) handleCommandList(update tg.Update) error {
-	return b.send(tg.NewMessage(update.FromChat().ID, b.s.String()))
-}
-
-func (b *Bot) handleCommandNext(update tg.Update) error {
-	events, err := storage.Next(b.s)
-	if err != nil {
-		return err
-	}
-	return b.send(tg.NewMessage(update.FromChat().ID, events.String()))
 }
 
 func (b *Bot) send(c tg.Chattable) error {
