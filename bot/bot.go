@@ -73,6 +73,9 @@ func (b *Bot) Listen() {
 			}()
 			if err := b.handle(update); err != nil {
 				log.Println("ERROR", err)
+				if err := b.send(tg.NewMessage(update.FromChat().ID, format.MessageInternalError)); err != nil {
+					log.Println("ERROR", "couldn't send internal error message:", err)
+				}
 			}
 		}(update)
 	}
@@ -175,9 +178,7 @@ func (b *Bot) runConsume(c wizard.Consume, update tg.Update) error {
 	b.mu.Lock()
 	msg, consume, err := c(b.s, update)
 	b.mu.Unlock()
-	if errors.Is(err, wizard.ErrUserError) {
-		log.Println("WARN", err)
-	} else if err != nil {
+	if err != nil && !errors.Is(err, wizard.ErrUserError) {
 		return err
 	}
 	b.mu.Lock()

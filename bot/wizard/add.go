@@ -70,8 +70,9 @@ func (a *Add) Start(update tg.Update) tg.Chattable {
 
 var _ Consume = (*Add)(nil).Next
 
-// TODO: add user error messages
-// TODO: add validation
+// NOTE: this works on a happy path. If a parsing error occurs, then that's
+// likely due to a malicious client using malformed callback. For steps that
+// consume update.Message.Text we just retry the same step.
 func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume, error) {
 	switch a.step {
 	case addStepStart:
@@ -108,11 +109,15 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume
 		a.step += 1
 		return msg, nil, nil
 	case addStepType:
-		et, err := parseCallbackData(update.CallbackData(), a, addCallbackStepType)
+		eventType, err := parseCallbackData(update.CallbackData(), a, addCallbackStepType)
 		if err != nil {
 			return nil, nil, err
 		}
-		a.e.Type = models.EventType(et)
+		et := models.EventType(eventType)
+		if err := et.Validate(); err != nil {
+			return nil, nil, err
+		}
+		a.e.Type = et
 		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, format.MessageAddStepType)
 		a.step += 1
 		return msg, a.Next, nil
@@ -138,6 +143,9 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume
 	case addStepSurname:
 		if update.Message != nil {
 			a.e.Surname = update.Message.Text
+		}
+		if err := a.e.Validate(); err != nil {
+			return nil, nil, err
 		}
 		if err := s.Add(a.e); err != nil {
 			return nil, nil, err
