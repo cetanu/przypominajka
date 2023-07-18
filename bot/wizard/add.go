@@ -58,8 +58,7 @@ func (a *Add) Start(update tg.Update) tg.Chattable {
 	go func() {
 		select {
 		case <-ctx.Done():
-			// TODO: add a message for user about timeout
-		case <-time.After(30 * time.Second): // FIXME: make this longer
+		case <-time.After(5 * time.Minute):
 			a.Reset()
 		}
 	}()
