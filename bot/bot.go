@@ -129,33 +129,36 @@ func (b *Bot) handle(update tg.Update) error {
 			return nil
 		}
 
-	case update.Message.IsCommand():
-		// NOTE: if another bot has /next command, then this will be triggered.
-		// To prevent this behavior, we can CommandWithAt() and check whether
-		// <command>@<bot_name> matches.
-		switch cmd := update.Message.Command(); cmd {
-		case "abort":
-			b.mu.Lock()
-			for _, w := range b.wizards {
-				w.Reset()
+	case update.Message != nil:
+		switch m := update.Message; {
+		case m.IsCommand():
+			// NOTE: if another bot has /next command, then this will be triggered.
+			// To prevent this behavior, we can CommandWithAt() and check whether
+			// <command>@<bot_name> matches.
+			switch cmd := update.Message.Command(); cmd {
+			case "abort":
+				b.mu.Lock()
+				for _, w := range b.wizards {
+					w.Reset()
+				}
+				b.mu.Unlock()
+			case "list":
+				return b.send(tg.NewMessage(update.FromChat().ID, b.s.String()))
+			case "next":
+				events, err := storage.Next(b.s)
+				if err != nil {
+					return err
+				}
+				return b.send(tg.NewMessage(update.FromChat().ID, events.String()))
+			default:
+				if w, ok := b.wizards[update.Message.Command()]; ok {
+					return b.send(w.Start(update))
+				}
 			}
-			b.mu.Unlock()
-		case "list":
-			return b.send(tg.NewMessage(update.FromChat().ID, b.s.String()))
-		case "next":
-			events, err := storage.Next(b.s)
-			if err != nil {
-				return err
-			}
-			return b.send(tg.NewMessage(update.FromChat().ID, events.String()))
-		default:
-			if w, ok := b.wizards[update.Message.Command()]; ok {
-				return b.send(w.Start(update))
-			}
-		}
 
-	case update.Message.Text != "":
-		return b.runConsume(b.consume, update)
+		case m.Text != "":
+			return b.runConsume(b.consume, update)
+		}
 	}
 	return nil
 }
