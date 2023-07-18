@@ -46,5 +46,5 @@ func (et EventType) Validate() error {
 			return nil
 		}
 	}
-	return fmt.Errorf("invalid event type: %s", et)
+	return ErrInvalidEventType
 }
