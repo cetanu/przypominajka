@@ -32,16 +32,20 @@ const (
 	addStepDone
 )
 
-// TODO: add some kind of UUID to the callback data to prevent collisions
 // FIXME: I think bot locks are messed up... Maybe this thing should have its own lock?
 // Maybe bot should do write lock on the whole wizard? But when?
 type Add struct {
+	id          string
 	step        int
 	e           models.Event
 	cancelReset context.CancelFunc
 }
 
 var _ Interface = (*Add)(nil)
+
+func (a *Add) ID() string {
+	return a.id
+}
 
 func (a *Add) Active() bool {
 	return a.step != addStepStart
@@ -53,6 +57,7 @@ func (a *Add) Name() string {
 
 func (a *Add) Start(update tg.Update) tg.Chattable {
 	a.Reset()
+	a.id = newID()
 	ctx, cancel := context.WithCancel(context.Background())
 	a.cancelReset = cancel
 	go func() {
@@ -77,7 +82,7 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume
 	switch a.step {
 	case addStepStart:
 		msg := tg.NewMessage(update.FromChat().ID, format.MessageAddStepStart)
-		msg.ReplyMarkup = addKeyboardMonths
+		msg.ReplyMarkup = a.keyboardMonths()
 		a.step += 1
 		return msg, nil, nil
 	case addStepMonth:
@@ -91,7 +96,7 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume
 		}
 		a.e.Month = time.Month(m)
 		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, format.MessageAddStepMonth)
-		msg.ReplyMarkup = addKeyboardDays(a.e.Month)
+		msg.ReplyMarkup = a.keyboardDays(a.e.Month)
 		a.step += 1
 		return msg, nil, nil
 	case addStepDay:
@@ -105,7 +110,7 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume
 		}
 		a.e.Day = d
 		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, format.MessageAddStepDay)
-		msg.ReplyMarkup = addKeyboardTypes()
+		msg.ReplyMarkup = a.keyboardTypes()
 		a.step += 1
 		return msg, nil, nil
 	case addStepType:
@@ -157,39 +162,42 @@ func (a *Add) Reset() {
 	if cr := a.cancelReset; cr != nil {
 		cr()
 	}
+	a.id = ""
 	a.step = addStepStart
 	a.e = models.Event{}
 	a.cancelReset = nil
 }
 
-var addKeyboardMonths = tg.NewInlineKeyboardMarkup(
-	tg.NewInlineKeyboardRow(
-		tg.NewInlineKeyboardButtonData("Styczeń", addCallbackMonth(1)),
-		tg.NewInlineKeyboardButtonData("Luty", addCallbackMonth(2)),
-		tg.NewInlineKeyboardButtonData("Marzec", addCallbackMonth(3)),
-	),
-	tg.NewInlineKeyboardRow(
-		tg.NewInlineKeyboardButtonData("Kwiecień", addCallbackMonth(4)),
-		tg.NewInlineKeyboardButtonData("Maj", addCallbackMonth(5)),
-		tg.NewInlineKeyboardButtonData("Czerwiec", addCallbackMonth(6)),
-	),
-	tg.NewInlineKeyboardRow(
-		tg.NewInlineKeyboardButtonData("Lipiec", addCallbackMonth(7)),
-		tg.NewInlineKeyboardButtonData("Sierpień", addCallbackMonth(8)),
-		tg.NewInlineKeyboardButtonData("Wrzesień", addCallbackMonth(9)),
-	),
-	tg.NewInlineKeyboardRow(
-		tg.NewInlineKeyboardButtonData("Październik", addCallbackMonth(10)),
-		tg.NewInlineKeyboardButtonData("Listopad", addCallbackMonth(11)),
-		tg.NewInlineKeyboardButtonData("Grudzień", addCallbackMonth(12)),
-	),
-)
-
-func addCallbackMonth(m int) string {
-	return newCallbackData(&Add{}, addCallbackStepMonth, strconv.Itoa(m))
+func (a *Add) keyboardMonths() tg.InlineKeyboardMarkup {
+	return tg.NewInlineKeyboardMarkup(
+		tg.NewInlineKeyboardRow(
+			tg.NewInlineKeyboardButtonData("Styczeń", a.callbackMonth(1)),
+			tg.NewInlineKeyboardButtonData("Luty", a.callbackMonth(2)),
+			tg.NewInlineKeyboardButtonData("Marzec", a.callbackMonth(3)),
+		),
+		tg.NewInlineKeyboardRow(
+			tg.NewInlineKeyboardButtonData("Kwiecień", a.callbackMonth(4)),
+			tg.NewInlineKeyboardButtonData("Maj", a.callbackMonth(5)),
+			tg.NewInlineKeyboardButtonData("Czerwiec", a.callbackMonth(6)),
+		),
+		tg.NewInlineKeyboardRow(
+			tg.NewInlineKeyboardButtonData("Lipiec", a.callbackMonth(7)),
+			tg.NewInlineKeyboardButtonData("Sierpień", a.callbackMonth(8)),
+			tg.NewInlineKeyboardButtonData("Wrzesień", a.callbackMonth(9)),
+		),
+		tg.NewInlineKeyboardRow(
+			tg.NewInlineKeyboardButtonData("Październik", a.callbackMonth(10)),
+			tg.NewInlineKeyboardButtonData("Listopad", a.callbackMonth(11)),
+			tg.NewInlineKeyboardButtonData("Grudzień", a.callbackMonth(12)),
+		),
+	)
 }
 
-func addKeyboardDays(m time.Month) *tg.InlineKeyboardMarkup {
+func (a *Add) callbackMonth(m int) string {
+	return newCallbackData(a, addCallbackStepMonth, strconv.Itoa(m))
+}
+
+func (a *Add) keyboardDays(m time.Month) *tg.InlineKeyboardMarkup {
 	const nCols = 8 // that's the max Telegram allows for an inline keyboard
 	n := 31
 	switch m {
@@ -201,15 +209,15 @@ func addKeyboardDays(m time.Month) *tg.InlineKeyboardMarkup {
 	rows := make([][]tg.InlineKeyboardButton, 4)
 	for i := 0; i < n; i++ {
 		d := strconv.Itoa(i + 1)
-		rows[i/nCols] = append(rows[i/nCols], tg.NewInlineKeyboardButtonData(d, newCallbackData(&Add{}, addCallbackStepDay, d)))
+		rows[i/nCols] = append(rows[i/nCols], tg.NewInlineKeyboardButtonData(d, newCallbackData(a, addCallbackStepDay, d)))
 	}
 	return &tg.InlineKeyboardMarkup{InlineKeyboard: rows}
 }
 
-func addKeyboardTypes() *tg.InlineKeyboardMarkup {
+func (a *Add) keyboardTypes() *tg.InlineKeyboardMarkup {
 	rows := make([][]tg.InlineKeyboardButton, 1)
 	for _, et := range models.EventTypes {
-		rows[0] = append(rows[0], tg.NewInlineKeyboardButtonData(et.Format(false), newCallbackData(&Add{}, addCallbackStepType, string(et))))
+		rows[0] = append(rows[0], tg.NewInlineKeyboardButtonData(et.Format(false), newCallbackData(a, addCallbackStepType, string(et))))
 	}
 	return &tg.InlineKeyboardMarkup{InlineKeyboard: rows}
 }
