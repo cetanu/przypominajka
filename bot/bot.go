@@ -130,6 +130,8 @@ func (b *Bot) handle(update tg.Update) error {
 				w.Reset()
 			}
 			b.mu.Unlock()
+		case "list":
+			return b.handleCommandList(update)
 		case "next":
 			return b.handleCommandNext(update)
 		default:
@@ -149,6 +151,10 @@ func (b *Bot) handleCallbackNotifyDone(cq *tg.CallbackQuery) error {
 	edit.ParseMode = tg.ModeMarkdown
 	_, err := b.api.Send(edit)
 	return fmt.Errorf("failed to edit message: %w", err)
+}
+
+func (b *Bot) handleCommandList(update tg.Update) error {
+	return b.send(tg.NewMessage(update.FromChat().ID, b.s.String()))
 }
 
 func (b *Bot) handleCommandNext(update tg.Update) error {
