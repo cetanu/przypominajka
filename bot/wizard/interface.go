@@ -17,6 +17,7 @@ var (
 )
 
 type Interface interface {
+	Active() bool
 	Name() string
 	Start(update tg.Update) tg.Chattable
 	Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume, error)

@@ -37,6 +37,10 @@ type Add struct {
 
 var _ Interface = (*Add)(nil)
 
+func (a *Add) Active() bool {
+	return a.step != addStepStart
+}
+
 func (a *Add) Name() string {
 	return "add"
 }

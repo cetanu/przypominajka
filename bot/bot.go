@@ -119,7 +119,10 @@ func (b *Bot) handle(update tg.Update) error {
 			if !ok {
 				return nil
 			}
-			return b.runConsume(w.Next, update)
+			if w.Active() {
+				return b.runConsume(w.Next, update)
+			}
+			return nil
 		}
 
 	case update.Message.IsCommand():
