@@ -25,7 +25,10 @@ const (
 
 // EventType formats
 const (
-	Birthday           = "urodziny"
-	Nameday            = "imieniny"
-	WeddingAnniversary = "rocznicę ślubu"
+	BirthdayNominative           = "urodziny"
+	BirthdayAccusative           = "urodziny"
+	NamedayNominative            = "imieniny"
+	NamedayAccusative            = "imieniny"
+	WeddingAnniversaryNominative = "rocznica ślubu"
+	WeddingAnniversaryAccusative = "rocznicę ślubu"
 )

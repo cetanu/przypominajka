@@ -1,10 +1,15 @@
 package bot
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"runtime/debug"
+	"strings"
+	"sync"
 	"time"
 
+	"git.sr.ht/~tymek/przypominajka/bot/wizard"
 	"git.sr.ht/~tymek/przypominajka/format"
 	"git.sr.ht/~tymek/przypominajka/models"
 	"git.sr.ht/~tymek/przypominajka/storage"
@@ -14,22 +19,29 @@ import (
 const dataNotifyDone = "done"
 
 type Bot struct {
-	api    *tg.BotAPI
-	chatID int64
-	s      storage.Interface
+	mu      sync.Mutex
+	api     *tg.BotAPI
+	chatID  int64
+	s       storage.Interface
+	wizards map[string]wizard.Interface
+	consume wizard.Consume
 }
 
-func New(token string, chatID int64, s storage.Interface) (*Bot, error) {
+func New(token string, chatID int64, s storage.Interface, wizards ...wizard.Interface) (*Bot, error) {
 	api, err := tg.NewBotAPI(token)
 	if err != nil {
 		return nil, err
 	}
 	log.Println("INFO", "Authorized as", api.Self.UserName)
-	return &Bot{api: api, chatID: chatID, s: s}, nil
+	m := make(map[string]wizard.Interface, len(wizards))
+	for _, w := range wizards {
+		m[w.Name()] = w
+	}
+	return &Bot{api: api, chatID: chatID, s: s, wizards: m}, nil
 }
 
 func ListenAndServe(token string, chatID int64, s storage.Interface) error {
-	b, err := New(token, chatID, s)
+	b, err := New(token, chatID, s, &wizard.Add{})
 	if err != nil {
 		return err
 	}
@@ -42,7 +54,7 @@ func (b *Bot) Notify(e models.Event) error {
 	msg := tg.NewMessage(b.chatID, e.Format(false))
 	msg.ReplyMarkup = tg.NewInlineKeyboardMarkup(
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("Done", dataNotifyDone),
+			tg.NewInlineKeyboardButtonData(format.MarkupButtonDone, dataNotifyDone),
 		),
 	)
 	return b.send(msg)
@@ -52,9 +64,20 @@ func (b *Bot) Listen() {
 	u := tg.NewUpdate(0)
 	u.Timeout = 60
 	for update := range b.api.GetUpdatesChan(u) {
-		if err := b.handle(update); err != nil {
-			log.Println("ERROR", err)
-		}
+		go func(update tg.Update) {
+			defer func() {
+				if r := recover(); r != nil {
+					fmt.Println("PANIC", r)
+					debug.PrintStack()
+				}
+			}()
+			if err := b.handle(update); err != nil {
+				log.Println("ERROR", err)
+				if err := b.send(tg.NewMessage(update.FromChat().ID, format.MessageInternalError)); err != nil {
+					log.Println("ERROR", "couldn't send internal error message:", err)
+				}
+			}
+		}(update)
 	}
 }
 
@@ -85,41 +108,84 @@ func (b *Bot) handle(update tg.Update) error {
 		if _, err := b.api.Request(tg.NewCallback(update.CallbackQuery.ID, update.CallbackQuery.Data)); err != nil {
 			return err
 		}
-		switch update.CallbackQuery.Data {
+		switch data := update.CallbackQuery.Data; data {
 		case dataNotifyDone:
-			return b.handleCallbackNotifyDone(update.CallbackQuery)
+			cq := update.CallbackQuery
+			edit := tg.NewEditMessageText(cq.Message.Chat.ID, cq.Message.MessageID, fmt.Sprintf(format.MessageDone, cq.From.UserName, cq.Message.Text))
+			edit.ParseMode = tg.ModeMarkdown
+			return b.send(edit)
+		default:
+			name, _, ok := strings.Cut(update.CallbackData(), wizard.CallbackSep)
+			if !ok {
+				return nil
+			}
+			w, ok := b.wizards[name]
+			if !ok {
+				return nil
+			}
+			if w.Active() {
+				return b.runConsume(w.Next, update)
+			}
+			return nil
 		}
 
-	case update.Message.IsCommand():
-		// NOTE: if another bot has /next command, then this will be triggered.
-		// To prevent this behavior, we can CommandWithAt() and check whether
-		// <command>@<bot_name> matches.
-		switch update.Message.Command() {
-		case "next":
-			return b.handleCommandNext(update)
+	case update.Message != nil:
+		switch m := update.Message; {
+		case m.IsCommand():
+			// NOTE: if another bot has /next command, then this will be triggered.
+			// To prevent this behavior, we can CommandWithAt() and check whether
+			// <command>@<bot_name> matches.
+			switch cmd := update.Message.Command(); cmd {
+			case "abort":
+				b.mu.Lock()
+				for _, w := range b.wizards {
+					w.Reset()
+				}
+				b.mu.Unlock()
+			case "list":
+				return b.send(tg.NewMessage(update.FromChat().ID, b.s.String()))
+			case "next":
+				events, err := storage.Next(b.s)
+				if err != nil {
+					return err
+				}
+				return b.send(tg.NewMessage(update.FromChat().ID, events.String()))
+			default:
+				if w, ok := b.wizards[update.Message.Command()]; ok {
+					return b.send(w.Start(update))
+				}
+			}
+
+		case m.Text != "":
+			return b.runConsume(b.consume, update)
 		}
 	}
 	return nil
 }
 
-func (b *Bot) handleCallbackNotifyDone(cq *tg.CallbackQuery) error {
-	edit := tg.NewEditMessageText(cq.Message.Chat.ID, cq.Message.MessageID, fmt.Sprintf(format.MessageDone, cq.From.UserName, cq.Message.Text))
-	edit.ParseMode = tg.ModeMarkdown
-	_, err := b.api.Send(edit)
-	return fmt.Errorf("failed to edit message: %w", err)
-}
-
-func (b *Bot) handleCommandNext(update tg.Update) error {
-	events, err := storage.Next(b.s)
-	if err != nil {
-		return err
+func (b *Bot) send(c tg.Chattable) error {
+	if c == nil {
+		log.Println("WARN", "nil message")
+		return nil
 	}
-	return b.send(tg.NewMessage(update.FromChat().ID, events.String()))
-}
-
-func (b *Bot) send(msg tg.MessageConfig) error {
-	if _, err := b.api.Send(msg); err != nil {
+	if _, err := b.api.Send(c); err != nil {
 		return fmt.Errorf("failed to send message: %w", err)
 	}
 	return nil
+}
+
+func (b *Bot) runConsume(c wizard.Consume, update tg.Update) error {
+	if c == nil {
+		return nil
+	}
+	b.mu.Lock()
+	msg, consume, err := c(b.s, update)
+	b.mu.Unlock()
+	if err != nil && !errors.Is(err, wizard.ErrUserError) {
+		return err
+	}
+	b.mu.Lock()
+	b.consume = consume
+	b.mu.Unlock()
+	return b.send(msg)
 }
