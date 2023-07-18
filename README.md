@@ -1,11 +1,10 @@
-<!-- FIXME: update docs, especially commands -->
 # przypominajka
 
 przypominajka runs a Telegram bot to send notifications about birthdays,
 namedays, and anniversaries.
 
 Note: reminders are written in Polish. If you want to customize them, then
-modify [formats.go](formats.go).
+modify [format](format) package contents.
 
 ## Installation
 Run `make` to compile przypominajka.
@@ -16,7 +15,7 @@ To override `/usr/local/` PREFIX variable use `make -e PREFIX=/foo/bar/baz/`.
 
 ## Usage
 ```
-przypominajka - a Telegram bot for sending event reminders
+`przypominajka - a Telegram bot for sending event reminders
 
 Description:
   przypominajka reads a YAML file with events and sends reminders about them.
@@ -109,10 +108,14 @@ Global Flags:
 ## Bot Setup
 Define the following commands for the bot:
 ```
-next - Find the next day with events and list them
+abort - Abort adding
+list - List all events
+next - Show upcoming events
 ```
 
 ### Polish
 ```
-next - Znajdź najbliższy dzień z wydarzeniami i wypisz te wydarzenia
+abort - Przerwij dodawanie
+list - Wypisz wszystkie wydarzenia
+next - Pokaż następne wydarzenia
 ```
