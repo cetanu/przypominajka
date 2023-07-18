@@ -152,7 +152,7 @@ func (b *Bot) handle(update tg.Update) error {
 				return b.send(tg.NewMessage(update.FromChat().ID, events.String()))
 			default:
 				if w, ok := b.wizards[update.Message.Command()]; ok {
-					return b.send(w.Start(update))
+					return b.send(wizard.Start(w, update))
 				}
 			}
 

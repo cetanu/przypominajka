@@ -32,10 +32,10 @@ const (
 )
 
 type Add struct {
-	id          string
-	step        int
-	e           models.Event
-	cancelReset context.CancelFunc
+	id   string
+	step int
+	e    models.Event
+	done context.CancelFunc
 }
 
 var _ Interface = (*Add)(nil)
@@ -52,18 +52,9 @@ func (a *Add) Name() string {
 	return "add"
 }
 
-func (a *Add) Start(update tg.Update) tg.Chattable {
-	a.Reset()
-	a.id = newID()
-	ctx, cancel := context.WithCancel(context.Background())
-	a.cancelReset = cancel
-	go func() {
-		select {
-		case <-ctx.Done():
-		case <-time.After(5 * time.Minute):
-			a.Reset()
-		}
-	}()
+func (a *Add) start(id string, done context.CancelFunc, update tg.Update) tg.Chattable {
+	a.id = id
+	a.done = done
 	msg, _, _ := a.Next(nil, update)
 	return msg
 }
@@ -152,6 +143,7 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume
 		}
 		msg := tg.NewMessage(update.FromChat().ID, fmt.Sprintf("Gotowe! Dodałem:\n%s", a.e.Format(true)))
 		a.step += 1
+		a.done()
 		return msg, nil, nil
 	case addStepDone:
 		return nil, nil, ErrDone
@@ -160,13 +152,10 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume
 }
 
 func (a *Add) Reset() {
-	if cr := a.cancelReset; cr != nil {
-		cr()
-	}
 	a.id = ""
 	a.step = addStepStart
 	a.e = models.Event{}
-	a.cancelReset = nil
+	a.done = nil
 }
 
 func (a *Add) keyboardMonths() tg.InlineKeyboardMarkup {
