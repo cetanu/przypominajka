@@ -1,7 +1,6 @@
 package bot
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"runtime/debug"
@@ -181,7 +180,7 @@ func (b *Bot) runConsume(c wizard.Consume, update tg.Update) error {
 	b.mu.Lock()
 	msg, consume, err := c(b.s, update)
 	b.mu.Unlock()
-	if err != nil && !errors.Is(err, wizard.ErrUserError) {
+	if err != nil {
 		return err
 	}
 	b.mu.Lock()
