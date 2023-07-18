@@ -11,5 +11,10 @@ const (
 	MessageAddStepStart = "Wybierz miesiąc:"
 	MessageAddStepMonth = "Wybierz dzień:"
 	MessageAddStepDay   = "Wybierz rodzaj wydarzenia:"
-	MessageAddStepType  = "Wyślij imię lub dwa imiona (każde w osobnej linijce)"
+	MessageAddStepType  = "Wyślij jedno imię lub dwa imiona (każde w osobnej linijce)"
+)
+
+const (
+	MarkupButtonDone = "Gotowe"
+	MarkupButtonSkip = "Pomiń"
 )

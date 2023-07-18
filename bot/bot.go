@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"runtime/debug"
@@ -53,7 +54,7 @@ func (b *Bot) Notify(e models.Event) error {
 	msg := tg.NewMessage(b.chatID, e.Format(false))
 	msg.ReplyMarkup = tg.NewInlineKeyboardMarkup(
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("Done", dataNotifyDone),
+			tg.NewInlineKeyboardButtonData(format.MarkupButtonDone, dataNotifyDone),
 		),
 	)
 	return b.send(msg)
@@ -174,7 +175,9 @@ func (b *Bot) runConsume(c wizard.Consume, update tg.Update) error {
 	b.mu.RLock()
 	msg, consume, err := c(b.s, update)
 	b.mu.RUnlock()
-	if err != nil {
+	if errors.Is(err, wizard.ErrUserError) {
+		log.Println("WARN", err)
+	} else if err != nil {
 		return err
 	}
 	b.mu.Lock()

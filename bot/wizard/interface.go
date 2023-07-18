@@ -14,6 +14,7 @@ const CallbackSep = ":"
 var (
 	ErrDone                = errors.New("wizard already done")
 	ErrInvalidCallbackData = errors.New("invalid callback data")
+	ErrUserError           = errors.New("user error")
 )
 
 type Interface interface {

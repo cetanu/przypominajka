@@ -3,8 +3,10 @@ package wizard
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"git.sr.ht/~tymek/przypominajka/format"
@@ -14,9 +16,10 @@ import (
 )
 
 const (
-	addCallbackStepMonth = "month"
-	addCallbackStepDay   = "day"
-	addCallbackStepType  = "type"
+	addCallbackStepMonth   = "month"
+	addCallbackStepDay     = "day"
+	addCallbackStepType    = "type"
+	addCallbackStepSurname = "surname"
 )
 
 const (
@@ -29,6 +32,9 @@ const (
 	addStepDone
 )
 
+// TODO: add some kind of UUID to the callback data to prevent collisions
+// FIXME: I think bot locks are messed up... Maybe this thing should have its own lock?
+// Maybe bot should do write lock on the whole wizard? But when?
 type Add struct {
 	step        int
 	e           models.Event
@@ -52,7 +58,8 @@ func (a *Add) Start(update tg.Update) tg.Chattable {
 	go func() {
 		select {
 		case <-ctx.Done():
-		case <-time.After(30 * time.Second):
+			// TODO: add a message for user about timeout
+		case <-time.After(30 * time.Second): // FIXME: make this longer
 			a.Reset()
 		}
 	}()
@@ -65,9 +72,6 @@ var _ Consume = (*Add)(nil).Next
 // TODO: add user error messages
 // TODO: add validation
 func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume, error) {
-	defer func() { // FIXME: this probably shouldn't run on error
-		a.step += 1
-	}()
 	log.Println("DEBUG", "step", a.step)
 	log.Println("DEBUG", "callback data", update.CallbackData())
 
@@ -75,6 +79,7 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume
 	case addStepStart:
 		msg := tg.NewMessage(update.FromChat().ID, format.MessageAddStepStart)
 		msg.ReplyMarkup = addKeyboardMonths
+		a.step += 1
 		return msg, nil, nil
 	case addStepMonth:
 		month, err := parseCallbackData(update.CallbackData(), a, addCallbackStepMonth)
@@ -88,6 +93,7 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume
 		a.e.Month = time.Month(m)
 		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, format.MessageAddStepMonth)
 		msg.ReplyMarkup = addKeyboardDays(a.e.Month)
+		a.step += 1
 		return msg, nil, nil
 	case addStepDay:
 		day, err := parseCallbackData(update.CallbackData(), a, addCallbackStepDay)
@@ -101,6 +107,7 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume
 		a.e.Day = d
 		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, format.MessageAddStepDay)
 		msg.ReplyMarkup = addKeyboardTypes()
+		a.step += 1
 		return msg, nil, nil
 	case addStepType:
 		et, err := parseCallbackData(update.CallbackData(), a, addCallbackStepType)
@@ -109,10 +116,38 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume
 		}
 		a.e.Type = models.EventType(et)
 		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, format.MessageAddStepType)
-		return msg, nil, nil
+		a.step += 1
+		return msg, a.Next, nil
 	case addStepName:
-		// TODO: how to pass typed in messages here?
+		lines := strings.Split(strings.TrimSpace(update.Message.Text), "\n")
+		if len(lines) != 1 && len(lines) != 2 {
+			a.step -= 1
+			return tg.NewMessage(update.FromChat().ID, format.MessageAddStepType), a.Next, nil
+		}
+		if len(lines) == 1 {
+			a.e.Name = lines[0]
+		} else {
+			a.e.Names = (*[2]string)(lines)
+		}
+		msg := tg.NewMessage(update.FromChat().ID, "Wyślij nazwisko:")
+		msg.ReplyMarkup = tg.NewInlineKeyboardMarkup(
+			tg.NewInlineKeyboardRow(
+				tg.NewInlineKeyboardButtonData(format.MarkupButtonSkip, newCallbackData(a, addCallbackStepSurname, "skip")),
+			),
+		)
+		a.step += 1
+		return msg, a.Next, nil
 	case addStepSurname:
+		if update.Message != nil {
+			a.e.Surname = update.Message.Text
+		}
+		if err := s.Add(a.e); err != nil {
+			return nil, nil, err
+		}
+		msg := tg.NewMessage(update.FromChat().ID, fmt.Sprintf("Gotowe! Dodałem:\n%s", a.e.Format(true)))
+		log.Printf("DEBUG %#v\n", a.e)
+		a.step += 1
+		return msg, nil, nil
 	case addStepDone:
 		return nil, nil, ErrDone
 	}
