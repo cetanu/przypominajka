@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -74,9 +73,6 @@ var _ Consume = (*Add)(nil).Next
 // TODO: add user error messages
 // TODO: add validation
 func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume, error) {
-	log.Println("DEBUG", "step", a.step)
-	log.Println("DEBUG", "callback data", update.CallbackData())
-
 	switch a.step {
 	case addStepStart:
 		msg := tg.NewMessage(update.FromChat().ID, format.MessageAddStepStart)
@@ -147,7 +143,6 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume
 			return nil, nil, err
 		}
 		msg := tg.NewMessage(update.FromChat().ID, fmt.Sprintf("Gotowe! Dodałem:\n%s", a.e.Format(true)))
-		log.Printf("DEBUG %#v\n", a.e)
 		a.step += 1
 		return msg, nil, nil
 	case addStepDone:
