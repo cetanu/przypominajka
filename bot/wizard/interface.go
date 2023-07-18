@@ -29,6 +29,18 @@ type Interface interface {
 
 type Consume func(s storage.Interface, update tg.Update) (tg.Chattable, Consume, error)
 
+const (
+	letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+)
+
+func newID() string {
+	b := make([]byte, 10)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
+}
+
 func newCallbackData(w Interface, parts ...string) string {
 	return fmt.Sprint(w.Name(), CallbackSep, w.ID(), CallbackSep, strings.Join(parts, CallbackSep))
 }
@@ -44,16 +56,4 @@ func parseCallbackData(s string, w Interface, static ...string) (string, error) 
 		}
 	}
 	return parts[len(parts)-1], nil
-}
-
-const (
-	letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-)
-
-func newID() string {
-	b := make([]byte, 10)
-	for i := range b {
-		b[i] = letterBytes[rand.Intn(len(letterBytes))]
-	}
-	return string(b)
 }
