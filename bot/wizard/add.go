@@ -15,8 +15,6 @@ import (
 )
 
 const (
-	addCallbackStepMonth   = "month"
-	addCallbackStepDay     = "day"
 	addCallbackStepType    = "type"
 	addCallbackStepSurname = "surname"
 )
@@ -68,11 +66,11 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume
 	switch a.step {
 	case addStepStart:
 		msg := tg.NewMessage(update.FromChat().ID, format.MessageAddStepStart)
-		msg.ReplyMarkup = a.keyboardMonths()
+		msg.ReplyMarkup = keyboardMonths(a)
 		a.step += 1
 		return msg, nil, nil
 	case addStepMonth:
-		month, err := parseCallbackData(update.CallbackData(), a, addCallbackStepMonth)
+		month, err := parseCallbackData(update.CallbackData(), a, callbackPartMonth)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -82,11 +80,11 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume
 		}
 		a.e.Month = time.Month(m)
 		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, format.MessageAddStepMonth)
-		msg.ReplyMarkup = a.keyboardDays(a.e.Month)
+		msg.ReplyMarkup = keyboardDays(a, a.e.Month)
 		a.step += 1
 		return msg, nil, nil
 	case addStepDay:
-		day, err := parseCallbackData(update.CallbackData(), a, addCallbackStepDay)
+		day, err := parseCallbackData(update.CallbackData(), a, callbackPartDay)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -156,52 +154,6 @@ func (a *Add) Reset() {
 	a.step = addStepStart
 	a.e = models.Event{}
 	a.done = nil
-}
-
-func (a *Add) keyboardMonths() tg.InlineKeyboardMarkup {
-	return tg.NewInlineKeyboardMarkup(
-		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("Styczeń", a.callbackMonth(1)),
-			tg.NewInlineKeyboardButtonData("Luty", a.callbackMonth(2)),
-			tg.NewInlineKeyboardButtonData("Marzec", a.callbackMonth(3)),
-		),
-		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("Kwiecień", a.callbackMonth(4)),
-			tg.NewInlineKeyboardButtonData("Maj", a.callbackMonth(5)),
-			tg.NewInlineKeyboardButtonData("Czerwiec", a.callbackMonth(6)),
-		),
-		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("Lipiec", a.callbackMonth(7)),
-			tg.NewInlineKeyboardButtonData("Sierpień", a.callbackMonth(8)),
-			tg.NewInlineKeyboardButtonData("Wrzesień", a.callbackMonth(9)),
-		),
-		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("Październik", a.callbackMonth(10)),
-			tg.NewInlineKeyboardButtonData("Listopad", a.callbackMonth(11)),
-			tg.NewInlineKeyboardButtonData("Grudzień", a.callbackMonth(12)),
-		),
-	)
-}
-
-func (a *Add) callbackMonth(m int) string {
-	return newCallbackData(a, addCallbackStepMonth, strconv.Itoa(m))
-}
-
-func (a *Add) keyboardDays(m time.Month) *tg.InlineKeyboardMarkup {
-	const nCols = 8 // that's the max Telegram allows for an inline keyboard
-	n := 31
-	switch m {
-	case time.February:
-		n = 29
-	case time.April, time.June, time.September, time.November:
-		n = 30
-	}
-	rows := make([][]tg.InlineKeyboardButton, 4)
-	for i := 0; i < n; i++ {
-		d := strconv.Itoa(i + 1)
-		rows[i/nCols] = append(rows[i/nCols], tg.NewInlineKeyboardButtonData(d, newCallbackData(a, addCallbackStepDay, d)))
-	}
-	return &tg.InlineKeyboardMarkup{InlineKeyboard: rows}
 }
 
 func (a *Add) keyboardTypes() *tg.InlineKeyboardMarkup {
