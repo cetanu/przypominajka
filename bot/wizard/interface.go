@@ -17,6 +17,7 @@ const CallbackSep = ":"
 var (
 	ErrDone                = errors.New("wizard already done")
 	ErrInvalidCallbackData = errors.New("invalid callback data")
+	ErrUnknownWizardStep   = errors.New("unknown wizard step")
 )
 
 type Interface interface {

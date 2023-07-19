@@ -33,7 +33,7 @@ func (d *Delete) start(id string, done context.CancelFunc, update tg.Update) tg.
 }
 
 func (d *Delete) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume, error) {
-	return nil, nil, nil
+	return nil, nil, ErrUnknownWizardStep
 }
 
 func (d *Delete) Reset() {

@@ -2,7 +2,6 @@ package wizard
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -146,7 +145,7 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume
 	case addStepDone:
 		return nil, nil, ErrDone
 	}
-	return nil, nil, errors.New("unknown wizard step")
+	return nil, nil, ErrUnknownWizardStep
 }
 
 func (a *Add) Reset() {
