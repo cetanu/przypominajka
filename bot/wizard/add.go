@@ -32,8 +32,8 @@ const (
 type Add struct {
 	id   string
 	step int
-	e    models.Event
 	done context.CancelFunc
+	e    models.Event
 }
 
 var _ Interface = (*Add)(nil)
