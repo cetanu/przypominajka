@@ -65,7 +65,7 @@ var _ Consume = (*Add)(nil).Next
 func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume, error) {
 	switch a.step {
 	case addStepStart:
-		msg := tg.NewMessage(update.FromChat().ID, format.MessageAddStepStart)
+		msg := tg.NewMessage(update.FromChat().ID, format.MessageChooseMonth)
 		msg.ReplyMarkup = keyboardMonths(a)
 		a.step += 1
 		return msg, nil, nil
@@ -79,7 +79,7 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume
 			return nil, nil, err
 		}
 		a.e.Month = time.Month(m)
-		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, format.MessageAddStepMonth)
+		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, format.MessageChooseDay)
 		msg.ReplyMarkup = keyboardDays(a, a.e.Month)
 		a.step += 1
 		return msg, nil, nil
