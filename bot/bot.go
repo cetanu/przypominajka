@@ -40,7 +40,7 @@ func New(token string, chatID int64, s storage.Interface, wizards ...wizard.Inte
 }
 
 func ListenAndServe(token string, chatID int64, s storage.Interface) error {
-	b, err := New(token, chatID, s, &wizard.Add{})
+	b, err := New(token, chatID, s, &wizard.Add{}, &wizard.Delete{})
 	if err != nil {
 		return err
 	}
