@@ -14,6 +14,10 @@ type Interface interface {
 	Remove(e models.Event) error
 }
 
+func At(s Interface, m time.Month, d int) (models.Events, error) {
+	return s.At(time.Date(1970, m, d, 0, 0, 0, 0, time.UTC))
+}
+
 func Next(s Interface) (models.Events, error) {
 	now := time.Now()
 	nextDay := now.AddDate(0, 0, 1)

@@ -108,14 +108,18 @@ Global Flags:
 ## Bot Setup
 Define the following commands for the bot:
 ```
-abort - Abort adding
+abort - Abort adding or deleting an event
+add - Add a new event
+delete - Delete an event
 list - List all events
 next - Show upcoming events
 ```
 
 ### Polish
 ```
-abort - Przerwij dodawanie
+abort - Przerwij dodawanie lub usuwanie
+add - Dodaj nowe wydarzenie
+delete - Usuń wydarzenie
 list - Wypisz wszystkie wydarzenia
 next - Pokaż następne wydarzenia
 ```

@@ -1,7 +1,6 @@
 package bot
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"runtime/debug"
@@ -41,7 +40,7 @@ func New(token string, chatID int64, s storage.Interface, wizards ...wizard.Inte
 }
 
 func ListenAndServe(token string, chatID int64, s storage.Interface) error {
-	b, err := New(token, chatID, s, &wizard.Add{})
+	b, err := New(token, chatID, s, &wizard.Add{}, &wizard.Delete{})
 	if err != nil {
 		return err
 	}
@@ -73,7 +72,7 @@ func (b *Bot) Listen() {
 			}()
 			if err := b.handle(update); err != nil {
 				log.Println("ERROR", err)
-				if err := b.send(tg.NewMessage(update.FromChat().ID, format.MessageInternalError)); err != nil {
+				if err := b.send(tg.NewMessage(update.FromChat().ID, format.MessageOops)); err != nil {
 					log.Println("ERROR", "couldn't send internal error message:", err)
 				}
 			}
@@ -142,6 +141,7 @@ func (b *Bot) handle(update tg.Update) error {
 					w.Reset()
 				}
 				b.mu.Unlock()
+				return b.send(tg.NewMessage(update.FromChat().ID, format.MessageAbort))
 			case "list":
 				return b.send(tg.NewMessage(update.FromChat().ID, b.s.String()))
 			case "next":
@@ -152,7 +152,7 @@ func (b *Bot) handle(update tg.Update) error {
 				return b.send(tg.NewMessage(update.FromChat().ID, events.String()))
 			default:
 				if w, ok := b.wizards[update.Message.Command()]; ok {
-					return b.send(w.Start(update))
+					return b.send(wizard.Start(w, update))
 				}
 			}
 
@@ -181,7 +181,7 @@ func (b *Bot) runConsume(c wizard.Consume, update tg.Update) error {
 	b.mu.Lock()
 	msg, consume, err := c(b.s, update)
 	b.mu.Unlock()
-	if err != nil && !errors.Is(err, wizard.ErrUserError) {
+	if err != nil {
 		return err
 	}
 	b.mu.Lock()
