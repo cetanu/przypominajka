@@ -72,7 +72,7 @@ func (b *Bot) Listen() {
 			}()
 			if err := b.handle(update); err != nil {
 				log.Println("ERROR", err)
-				if err := b.send(tg.NewMessage(update.FromChat().ID, format.MessageInternalError)); err != nil {
+				if err := b.send(tg.NewMessage(update.FromChat().ID, format.MessageOops)); err != nil {
 					log.Println("ERROR", "couldn't send internal error message:", err)
 				}
 			}
