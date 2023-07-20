@@ -141,6 +141,7 @@ func (b *Bot) handle(update tg.Update) error {
 					w.Reset()
 				}
 				b.mu.Unlock()
+				return b.send(tg.NewMessage(update.FromChat().ID, format.MessageAbort))
 			case "list":
 				return b.send(tg.NewMessage(update.FromChat().ID, b.s.String()))
 			case "next":
