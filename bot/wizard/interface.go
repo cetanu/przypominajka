@@ -31,6 +31,7 @@ type Interface interface {
 
 type Consume func(s storage.Interface, update tg.Update) (tg.Chattable, Consume, error)
 
+// TODO: send a notification with a timeout
 func Start(w Interface, update tg.Update) tg.Chattable {
 	w.Reset()
 	ctx, cancel := context.WithCancel(context.Background())

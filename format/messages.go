@@ -1,3 +1,5 @@
+// TODO: use i18n to make it work in both English and Polish
+// TODO: consider making commands localized
 package format
 
 const (
