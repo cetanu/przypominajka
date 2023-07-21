@@ -2,8 +2,6 @@ package models
 
 import (
 	"fmt"
-
-	"git.sr.ht/~tymek/przypominajka/format"
 )
 
 var EventTypes = []EventType{Birthday, Nameday, Wedding}
@@ -24,18 +22,14 @@ func (et EventType) String() string {
 
 func (et EventType) Format(accusative bool) string {
 	switch {
-	case et == Birthday && accusative:
-		return format.BirthdayAccusative
 	case et == Birthday:
-		return format.BirthdayNominative
-	case et == Nameday && accusative:
-		return format.NamedayAccusative
+		return "urodziny"
 	case et == Nameday:
-		return format.NamedayNominative
+		return "imieniny"
 	case et == Wedding && accusative:
-		return format.WeddingAnniversaryAccusative
+		return "rocznicę ślubu"
 	case et == Wedding:
-		return format.WeddingAnniversaryNominative
+		return "rocznica ślubu"
 	}
 	return string(et)
 }

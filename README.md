@@ -3,8 +3,9 @@
 przypominajka runs a Telegram bot to send notifications about birthdays,
 namedays, and anniversaries.
 
-Note: reminders are written in Polish. If you want to customize them, then
-modify [format](format) package contents.
+Note: all user-facing messages are in Polish. If you would like to translate
+them, or introduce internationalization, then feel free to reach out to me, I
+will gladly help.
 
 ## Installation
 Run `make` to compile przypominajka.

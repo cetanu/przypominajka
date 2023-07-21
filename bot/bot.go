@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"git.sr.ht/~tymek/przypominajka/bot/wizard"
-	"git.sr.ht/~tymek/przypominajka/format"
 	"git.sr.ht/~tymek/przypominajka/models"
 	"git.sr.ht/~tymek/przypominajka/storage"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -53,7 +52,7 @@ func (b *Bot) Notify(e models.Event) error {
 	msg := tg.NewMessage(b.chatID, e.Format(false))
 	msg.ReplyMarkup = tg.NewInlineKeyboardMarkup(
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData(format.MarkupButtonDone, dataNotifyDone),
+			tg.NewInlineKeyboardButtonData("Gotowe", dataNotifyDone),
 		),
 	)
 	return b.send(msg)
@@ -72,7 +71,7 @@ func (b *Bot) Listen() {
 			}()
 			if err := b.handle(update); err != nil {
 				log.Println("ERROR", err)
-				if err := b.send(tg.NewMessage(update.FromChat().ID, format.MessageOops)); err != nil {
+				if err := b.send(tg.NewMessage(update.FromChat().ID, "Coś poszło nie tak")); err != nil {
 					log.Println("ERROR", "couldn't send internal error message:", err)
 				}
 			}
@@ -110,7 +109,8 @@ func (b *Bot) handle(update tg.Update) error {
 		switch data := update.CallbackQuery.Data; data {
 		case dataNotifyDone:
 			cq := update.CallbackQuery
-			edit := tg.NewEditMessageText(cq.Message.Chat.ID, cq.Message.MessageID, fmt.Sprintf(format.MessageDone, cq.From.UserName, cq.Message.Text))
+			const format = "_✅ %s złożył(a) życzenia_\n\n%s"
+			edit := tg.NewEditMessageText(cq.Message.Chat.ID, cq.Message.MessageID, fmt.Sprintf(format, cq.From.UserName, cq.Message.Text))
 			edit.ParseMode = tg.ModeMarkdown
 			return b.send(edit)
 		default:
@@ -141,7 +141,7 @@ func (b *Bot) handle(update tg.Update) error {
 					w.Reset()
 				}
 				b.mu.Unlock()
-				return b.send(tg.NewMessage(update.FromChat().ID, format.MessageAbort))
+				return b.send(tg.NewMessage(update.FromChat().ID, "Przerwano!"))
 			case "list":
 				return b.send(tg.NewMessage(update.FromChat().ID, b.s.String()))
 			case "next":

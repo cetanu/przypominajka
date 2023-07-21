@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"git.sr.ht/~tymek/przypominajka/format"
 	"git.sr.ht/~tymek/przypominajka/models"
 	"git.sr.ht/~tymek/przypominajka/storage"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -64,7 +63,7 @@ var _ Consume = (*Add)(nil).Next
 func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume, error) {
 	switch a.step {
 	case addStepStart:
-		msg := tg.NewMessage(update.FromChat().ID, format.MessageChooseMonth)
+		msg := tg.NewMessage(update.FromChat().ID, "Wybierz miesiąc:")
 		msg.ReplyMarkup = keyboardMonths(a)
 		a.step += 1
 		return msg, nil, nil
@@ -78,7 +77,7 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume
 			return nil, nil, err
 		}
 		a.e.Month = time.Month(m)
-		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, format.MessageChooseDay)
+		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, "Wybierz dzień:")
 		msg.ReplyMarkup = keyboardDays(a, a.e.Month)
 		a.step += 1
 		return msg, nil, nil
@@ -92,7 +91,7 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume
 			return nil, nil, err
 		}
 		a.e.Day = d
-		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, format.MessageAddStepDay)
+		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, "Wybierz rodzaj wydarzenia:")
 		msg.ReplyMarkup = a.keyboardTypes()
 		a.step += 1
 		return msg, nil, nil
@@ -106,24 +105,24 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume
 			return nil, nil, err
 		}
 		a.e.Type = et
-		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, format.MessageAddStepType)
+		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, "Wyślij jedno imię lub dwa imiona (każde w osobnej linijce)")
 		a.step += 1
 		return msg, a.Next, nil
 	case addStepName:
 		lines := strings.Split(strings.TrimSpace(update.Message.Text), "\n")
 		if len(lines) != 1 && len(lines) != 2 {
 			a.step -= 1
-			return tg.NewMessage(update.FromChat().ID, format.MessageAddStepType), a.Next, nil
+			return tg.NewMessage(update.FromChat().ID, "Wyślij jedno imię lub dwa imiona (każde w osobnej linijce)"), a.Next, nil
 		}
 		if len(lines) == 1 {
 			a.e.Name = lines[0]
 		} else {
 			a.e.Names = (*[2]string)(lines)
 		}
-		msg := tg.NewMessage(update.FromChat().ID, format.MessageAddStepName)
+		msg := tg.NewMessage(update.FromChat().ID, "Wyślij nazwisko")
 		msg.ReplyMarkup = tg.NewInlineKeyboardMarkup(
 			tg.NewInlineKeyboardRow(
-				tg.NewInlineKeyboardButtonData(format.MarkupButtonSkip, newCallbackData(a, addCallbackStepSurname, "skip")),
+				tg.NewInlineKeyboardButtonData("Pomiń", newCallbackData(a, addCallbackStepSurname, "skip")),
 			),
 		)
 		a.step += 1

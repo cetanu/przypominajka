@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"time"
 
-	"git.sr.ht/~tymek/przypominajka/format"
 	"git.sr.ht/~tymek/przypominajka/models"
 	"git.sr.ht/~tymek/przypominajka/storage"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -59,7 +58,7 @@ func (d *Delete) start(id string, done context.CancelFunc, update tg.Update) tg.
 func (d *Delete) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume, error) {
 	switch d.step {
 	case deleteStepStart:
-		msg := tg.NewMessage(update.FromChat().ID, format.MessageChooseMonth)
+		msg := tg.NewMessage(update.FromChat().ID, "Wybierz miesiąc:")
 		msg.ReplyMarkup = keyboardMonths(d)
 		d.step += 1
 		return msg, nil, nil
@@ -73,7 +72,7 @@ func (d *Delete) Next(s storage.Interface, update tg.Update) (tg.Chattable, Cons
 			return nil, nil, err
 		}
 		d.month = time.Month(m)
-		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, format.MessageChooseDay)
+		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, "Wybierz dzień:")
 		msg.ReplyMarkup = keyboardDays(d, d.month)
 		d.step += 1
 		return msg, nil, nil
