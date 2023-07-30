@@ -18,12 +18,12 @@ Description:
   The reminders are sent out on the day of the event between 08:30 and 09:29
   system time (exact time depends on serve command startup time).
 
-  Reminders are written in Polish.
+  All user-facing messages are written in Polish.
 
 Example events.yaml:
   chat_ids:
     - 1234
-    - 5678 # has no data on start
+    - 5678 # has no initial data
 
   data:
     1234: # Chat ID 1234

@@ -16,28 +16,34 @@ To override `/usr/local/` PREFIX variable use `make -e PREFIX=/foo/bar/baz/`.
 
 ## Usage
 ```
-`przypominajka - a Telegram bot for sending event reminders
+przypominajka - a Telegram bot for sending event reminders
 
 Description:
   przypominajka reads a YAML file with events and sends reminders about them.
   The reminders are sent out on the day of the event between 08:30 and 09:29
   system time (exact time depends on serve command startup time).
 
-  Reminders are written in Polish.
+  All user-facing messages are written in Polish.
 
 Example events.yaml:
-  1: # January
-    5:
-      - name: "John"
-        type: "birthday"
-      - name: "Jane"
-        surname: "Doe"
-        type: "nameday"
-  4: # April
-    17:
-      - names: ["John", "Jane"]
-        surname: "Doe"
-        type: "wedding anniversary"
+  chat_ids:
+    - 1234
+    - 5678 # has no initial data
+
+  data:
+    1234: # Chat ID 1234
+      1: # January
+        5:
+          - name: "John"
+            type: "birthday"
+          - name: "Jane"
+            surname: "Doe"
+            type: "nameday"
+      4: # April
+        17:
+          - names: ["John", "Jane"]
+            surname: "Doe"
+            type: "wedding anniversary"
 
 Notes:
   - Name and names are mutually exclusive.
@@ -51,8 +57,7 @@ Usage:
 Available Commands:
   bot         Start Telegram bot to serve events and listen for updates
   help        Help about any command
-  list        List all events
-  next        Find the next day with events and list them
+  show        Show events
 
 Flags:
       --events string   YAML file defining events (default "events.yaml")
@@ -70,7 +75,6 @@ Usage:
   przypominajka bot [flags]
 
 Flags:
-      --chat-id int    Telegram chat ID
   -h, --help           help for bot
       --token string   Telegram bot token
 
@@ -78,45 +82,59 @@ Global Flags:
       --events string   YAML file defining events (default "events.yaml")
 ```
 
-### List
+### Show
 ```
-List all events
+Show events
 
 Usage:
-  przypominajka list [flags]
+  przypominajka show [command]
+
+Available Commands:
+  all         Show all events
+  next        Find the next day with events and list them
 
 Flags:
-  -h, --help   help for list
+      --chat-id int   Telegram chat ID
+  -h, --help          help for show
 
 Global Flags:
       --events string   YAML file defining events (default "events.yaml")
+
+Use "przypominajka show [command] --help" for more information about a command.
 ```
 
-### Next
+####  All
+```
+Show all events
+
+Usage:
+  przypominajka show all [flags]
+
+Flags:
+  -h, --help   help for all
+
+Global Flags:
+      --chat-id int     Telegram chat ID
+      --events string   YAML file defining events (default "events.yaml")
+```
+
+####  Next
 ```
 Find the next day with events and list them
 
 Usage:
-  przypominajka next [flags]
+  przypominajka show next [flags]
 
 Flags:
   -h, --help   help for next
 
 Global Flags:
+      --chat-id int     Telegram chat ID
       --events string   YAML file defining events (default "events.yaml")
 ```
 
 ## Bot Setup
 Define the following commands for the bot:
-```
-abort - Abort adding or deleting an event
-add - Add a new event
-delete - Delete an event
-list - List all events
-next - Show upcoming events
-```
-
-### Polish
 ```
 abort - Przerwij dodawanie lub usuwanie
 add - Dodaj nowe wydarzenie
