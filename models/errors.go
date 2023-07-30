@@ -2,8 +2,6 @@ package models
 
 import "errors"
 
-var ErrNotFound = errors.New("not found")
-
 // Validation errors
 var (
 	ErrMissingNameOrNames = errors.New("'name' or 'names' must be provided")

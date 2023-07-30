@@ -134,7 +134,7 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume
 		if err := a.e.Validate(); err != nil {
 			return nil, nil, err
 		}
-		if err := s.Add(a.e); err != nil {
+		if err := s.Add(update.FromChat().ID, a.e); err != nil {
 			return nil, nil, err
 		}
 		msg := tg.NewMessage(update.FromChat().ID, fmt.Sprintf("Gotowe! Dodałem:\n%s", a.e.Format(true)))

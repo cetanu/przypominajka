@@ -84,7 +84,7 @@ func (d *Delete) Next(s storage.Interface, update tg.Update) (tg.Chattable, Cons
 		if d.day, err = strconv.Atoi(day); err != nil {
 			return nil, nil, err
 		}
-		events, err := storage.At(s, d.month, d.day)
+		events, err := storage.At(s, update.FromChat().ID, d.month, d.day)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -105,7 +105,7 @@ func (d *Delete) Next(s storage.Interface, update tg.Update) (tg.Chattable, Cons
 		if err != nil {
 			return nil, nil, err
 		}
-		events, err := storage.At(s, d.month, d.day)
+		events, err := storage.At(s, update.FromChat().ID, d.month, d.day)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -129,7 +129,7 @@ func (d *Delete) Next(s storage.Interface, update tg.Update) (tg.Chattable, Cons
 		}
 		text := "Przerwano usuwanie. Wpisz /delete, aby rozpocząć ponownie"
 		if value == "yes" {
-			if err := s.Remove(d.e); err != nil {
+			if err := s.Remove(update.FromChat().ID, d.e); err != nil {
 				return nil, nil, err
 			}
 			text = fmt.Sprintf("Usunięto:\n%s", d.e.Format(true))

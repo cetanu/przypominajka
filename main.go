@@ -21,18 +21,24 @@ Description:
   Reminders are written in Polish.
 
 Example events.yaml:
-  1: # January
-    5:
-      - name: "John"
-        type: "birthday"
-      - name: "Jane"
-        surname: "Doe"
-        type: "nameday"
-  4: # April
-    17:
-      - names: ["John", "Jane"]
-        surname: "Doe"
-        type: "wedding anniversary"
+  chat_ids:
+    - 1234
+    - 5678 # has no data on start
+
+  data:
+    1234: # Chat ID 1234
+      1: # January
+        5:
+          - name: "John"
+            type: "birthday"
+          - name: "Jane"
+            surname: "Doe"
+            type: "nameday"
+      4: # April
+        17:
+          - names: ["John", "Jane"]
+            surname: "Doe"
+            type: "wedding anniversary"
 
 Notes:
   - Name and names are mutually exclusive.
@@ -68,19 +74,24 @@ func main() {
 		},
 	}
 
-	cmdList := &cobra.Command{
-		Use:   "list",
-		Short: "List all events",
+	cmdShow := &cobra.Command{
+		Use:   "show",
+		Short: "Show events",
+	}
+
+	cmdShowAll := &cobra.Command{
+		Use:   "all",
+		Short: "Show all events",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(s)
+			fmt.Println(s.Format(chatID))
 		},
 	}
 
-	cmdNext := &cobra.Command{
+	cmdShowNext := &cobra.Command{
 		Use:   "next",
 		Short: "Find the next day with events and list them",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			events, err := storage.Next(s)
+			events, err := storage.Next(s, chatID)
 			if err != nil {
 				return err
 			}
@@ -93,18 +104,21 @@ func main() {
 		Use:   "bot",
 		Short: "Start Telegram bot to serve events and listen for updates",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return bot.ListenAndServe(token, chatID, s)
+			return bot.ListenAndServe(token, s)
 		},
 	}
 
-	cmd.AddCommand(cmdList, cmdNext, cmdServe)
+	cmd.AddCommand(cmdShow, cmdServe)
 	cmd.PersistentFlags().StringVar(&eventsPath, "events", "events.yaml", "YAML file defining events")
-	cmdServe.Flags().StringVar(&token, "token", "", "Telegram bot token")
-	if err := cmdServe.MarkFlagRequired("token"); err != nil {
+
+	cmdShow.AddCommand(cmdShowAll, cmdShowNext)
+	cmdShow.PersistentFlags().Int64Var(&chatID, "chat-id", 0, "Telegram chat ID")
+	if err := cmdShow.MarkPersistentFlagRequired("chat-id"); err != nil {
 		log.Fatalln("FATAL", err)
 	}
-	cmdServe.Flags().Int64Var(&chatID, "chat-id", 0, "Telegram chat ID")
-	if err := cmdServe.MarkFlagRequired("chat-id"); err != nil {
+
+	cmdServe.Flags().StringVar(&token, "token", "", "Telegram bot token")
+	if err := cmdServe.MarkFlagRequired("token"); err != nil {
 		log.Fatalln("FATAL", err)
 	}
 

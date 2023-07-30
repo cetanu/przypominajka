@@ -19,27 +19,35 @@ const dataNotifyDone = "done"
 type Bot struct {
 	mu      sync.Mutex
 	api     *tg.BotAPI
-	chatID  int64
 	s       storage.Interface
-	wizards map[string]wizard.Interface
-	consume wizard.Consume
+	wizards map[int64]map[string]wizard.Interface
+	consume map[int64]wizard.Consume
 }
 
-func New(token string, chatID int64, s storage.Interface, wizards ...wizard.Interface) (*Bot, error) {
+func New(token string, s storage.Interface) (*Bot, error) {
 	api, err := tg.NewBotAPI(token)
 	if err != nil {
 		return nil, err
 	}
 	log.Println("INFO", "Authorized as", api.Self.UserName)
-	m := make(map[string]wizard.Interface, len(wizards))
-	for _, w := range wizards {
-		m[w.Name()] = w
+
+	m := map[int64]map[string]wizard.Interface{}
+	for _, chatID := range s.ChatIDs() {
+		m[chatID] = map[string]wizard.Interface{
+			(*wizard.Add)(nil).Name():    &wizard.Add{},
+			(*wizard.Delete)(nil).Name(): &wizard.Delete{},
+		}
 	}
-	return &Bot{api: api, chatID: chatID, s: s, wizards: m}, nil
+	return &Bot{
+		api:     api,
+		s:       s,
+		wizards: m,
+		consume: map[int64]wizard.Consume{},
+	}, nil
 }
 
-func ListenAndServe(token string, chatID int64, s storage.Interface) error {
-	b, err := New(token, chatID, s, &wizard.Add{}, &wizard.Delete{})
+func ListenAndServe(token string, s storage.Interface) error {
+	b, err := New(token, s)
 	if err != nil {
 		return err
 	}
@@ -48,8 +56,8 @@ func ListenAndServe(token string, chatID int64, s storage.Interface) error {
 	return nil
 }
 
-func (b *Bot) Notify(e models.Event) error {
-	msg := tg.NewMessage(b.chatID, e.Format(false))
+func (b *Bot) Notify(chatID int64, e models.Event) error {
+	msg := tg.NewMessage(chatID, e.Format(false))
 	msg.ReplyMarkup = tg.NewInlineKeyboardMarkup(
 		tg.NewInlineKeyboardRow(
 			tg.NewInlineKeyboardButtonData("Gotowe", dataNotifyDone),
@@ -84,21 +92,25 @@ func (b *Bot) Serve() {
 		if t.Round(time.Hour).Hour() != 9 { // run once a day between 8:30 and 9:29
 			continue
 		}
-		events, err := storage.Today(b.s)
-		if err != nil {
-			log.Println("ERROR", err)
-			continue
-		}
-		for _, e := range events {
-			if err := b.Notify(e); err != nil {
-				log.Println("ERROR", err)
-			}
+		for _, chatID := range b.s.ChatIDs() {
+			go func(chatID int64) {
+				events, err := storage.Today(b.s, chatID)
+				if err != nil {
+					log.Println("ERROR", err)
+					return
+				}
+				for _, e := range events {
+					if err := b.Notify(chatID, e); err != nil {
+						log.Println("ERROR", err)
+					}
+				}
+			}(chatID)
 		}
 	}
 }
 
 func (b *Bot) handle(update tg.Update) error {
-	if chat := update.FromChat(); chat == nil || chat.ID != b.chatID {
+	if chat := update.FromChat(); chat == nil || !b.s.IsEnabled(chat.ID) {
 		return nil
 	}
 	switch {
@@ -118,7 +130,7 @@ func (b *Bot) handle(update tg.Update) error {
 			if !ok {
 				return nil
 			}
-			w, ok := b.wizards[name]
+			w, ok := b.wizards[update.FromChat().ID][name]
 			if !ok {
 				return nil
 			}
@@ -137,27 +149,27 @@ func (b *Bot) handle(update tg.Update) error {
 			switch cmd := update.Message.Command(); cmd {
 			case "abort":
 				b.mu.Lock()
-				for _, w := range b.wizards {
+				for _, w := range b.wizards[update.FromChat().ID] {
 					w.Reset()
 				}
 				b.mu.Unlock()
 				return b.send(tg.NewMessage(update.FromChat().ID, "Przerwano!"))
 			case "list":
-				return b.send(tg.NewMessage(update.FromChat().ID, b.s.String()))
+				return b.send(tg.NewMessage(update.FromChat().ID, b.s.Format(update.FromChat().ID)))
 			case "next":
-				events, err := storage.Next(b.s)
+				events, err := storage.Next(b.s, update.FromChat().ID)
 				if err != nil {
 					return err
 				}
 				return b.send(tg.NewMessage(update.FromChat().ID, events.String()))
 			default:
-				if w, ok := b.wizards[update.Message.Command()]; ok {
+				if w, ok := b.wizards[update.FromChat().ID][update.Message.Command()]; ok {
 					return b.send(wizard.Start(w, update))
 				}
 			}
 
 		case m.Text != "":
-			return b.runConsume(b.consume, update)
+			return b.runConsume(b.consume[update.FromChat().ID], update)
 		}
 	}
 	return nil
@@ -185,7 +197,7 @@ func (b *Bot) runConsume(c wizard.Consume, update tg.Update) error {
 		return err
 	}
 	b.mu.Lock()
-	b.consume = consume
+	b.consume[update.FromChat().ID] = consume
 	b.mu.Unlock()
 	return b.send(msg)
 }
