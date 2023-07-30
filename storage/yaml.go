@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"git.sr.ht/~tymek/przypominajka/models"
+	"git.sr.ht/~tymek/przypominajka/v2/models"
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"

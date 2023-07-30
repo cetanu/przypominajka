@@ -1,4 +1,4 @@
-module git.sr.ht/~tymek/przypominajka
+module git.sr.ht/~tymek/przypominajka/v2
 
 go 1.20
 

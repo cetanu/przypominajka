@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"git.sr.ht/~tymek/przypominajka/models"
-	"git.sr.ht/~tymek/przypominajka/storage"
+	"git.sr.ht/~tymek/przypominajka/v2/models"
+	"git.sr.ht/~tymek/przypominajka/v2/storage"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
