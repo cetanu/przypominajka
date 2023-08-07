@@ -89,7 +89,7 @@ func (b *Bot) Listen() {
 
 func (b *Bot) Serve() {
 	for t := range time.Tick(time.Hour) {
-		if t.Round(time.Hour).Hour() != 9 { // run once a day between 8:30 and 9:29
+		if t.UTC().Round(time.Hour).Hour() != 7 { // run once a day between 7:30 and 8:29 UTC
 			continue
 		}
 		for _, chatID := range b.s.ChatIDs() {
