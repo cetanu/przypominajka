@@ -108,6 +108,7 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume
 		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, "Wyślij jedno imię lub dwa imiona (każde w osobnej linijce)")
 		a.step += 1
 		return msg, a.Next, nil
+	// FIXME: this step does not run for group chats
 	case addStepName:
 		lines := strings.Split(strings.TrimSpace(update.Message.Text), "\n")
 		if len(lines) != 1 && len(lines) != 2 {
