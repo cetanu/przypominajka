@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"git.sr.ht/~tymek/przypominajka/v2/bot"
-	"git.sr.ht/~tymek/przypominajka/v2/storage"
+	"github.com/TymekDev/przypominajka/v2/bot"
+	"github.com/TymekDev/przypominajka/v2/storage"
 	"github.com/spf13/cobra"
 )
 

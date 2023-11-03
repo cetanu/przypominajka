@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"git.sr.ht/~tymek/przypominajka/v2/models"
+	"github.com/TymekDev/przypominajka/v2/models"
 )
 
 type Interface interface {

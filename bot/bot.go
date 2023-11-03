@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"git.sr.ht/~tymek/przypominajka/v2/bot/wizard"
-	"git.sr.ht/~tymek/przypominajka/v2/models"
-	"git.sr.ht/~tymek/przypominajka/v2/storage"
+	"github.com/TymekDev/przypominajka/v2/bot/wizard"
+	"github.com/TymekDev/przypominajka/v2/models"
+	"github.com/TymekDev/przypominajka/v2/storage"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
