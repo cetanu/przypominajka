@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/TymekDev/przypominajka/v2/bot/wizard"
+	"github.com/TymekDev/przypominajka/v2/i18n"
 	"github.com/TymekDev/przypominajka/v2/models"
 	"github.com/TymekDev/przypominajka/v2/storage"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -57,10 +58,11 @@ func ListenAndServe(token string, s storage.Interface) error {
 }
 
 func (b *Bot) Notify(chatID int64, e models.Event) error {
+	lang := b.s.GetUserLanguage(chatID)
 	msg := tg.NewMessage(chatID, e.Format(false))
 	msg.ReplyMarkup = tg.NewInlineKeyboardMarkup(
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("Gotowe", dataNotifyDone),
+			tg.NewInlineKeyboardButtonData(i18n.T(lang, "done"), dataNotifyDone),
 		),
 	)
 	return b.send(msg)
@@ -79,7 +81,8 @@ func (b *Bot) Listen() {
 			}()
 			if err := b.handle(update); err != nil {
 				log.Println("ERROR", err)
-				if err := b.send(tg.NewMessage(update.FromChat().ID, "Coś poszło nie tak")); err != nil {
+				lang := b.s.GetUserLanguage(update.FromChat().ID)
+				if err := b.send(tg.NewMessage(update.FromChat().ID, i18n.T(lang, "something_wrong"))); err != nil {
 					log.Println("ERROR", "couldn't send internal error message:", err)
 				}
 			}
@@ -113,6 +116,7 @@ func (b *Bot) handle(update tg.Update) error {
 	if chat := update.FromChat(); chat == nil || !b.s.IsEnabled(chat.ID) {
 		return nil
 	}
+	lang := b.s.GetUserLanguage(update.FromChat().ID)
 	switch {
 	case update.CallbackQuery != nil:
 		if _, err := b.api.Request(tg.NewCallback(update.CallbackQuery.ID, update.CallbackQuery.Data)); err != nil {
@@ -121,7 +125,7 @@ func (b *Bot) handle(update tg.Update) error {
 		switch data := update.CallbackQuery.Data; data {
 		case dataNotifyDone:
 			cq := update.CallbackQuery
-			const format = "_✅ %s złożył(a) życzenia_\n\n%s"
+			var format = i18n.T(lang, "wishes_sent")
 			edit := tg.NewEditMessageText(cq.Message.Chat.ID, cq.Message.MessageID, fmt.Sprintf(format, cq.From.UserName, cq.Message.Text))
 			edit.ParseMode = tg.ModeMarkdown
 			return b.send(edit)
@@ -153,7 +157,7 @@ func (b *Bot) handle(update tg.Update) error {
 					w.Reset()
 				}
 				b.mu.Unlock()
-				return b.send(tg.NewMessage(update.FromChat().ID, "Przerwano!"))
+				return b.send(tg.NewMessage(update.FromChat().ID, i18n.T(lang, "operation_cancelled")))
 			case "list":
 				return b.send(tg.NewMessage(update.FromChat().ID, b.s.Format(update.FromChat().ID)))
 			case "next":
@@ -162,6 +166,18 @@ func (b *Bot) handle(update tg.Update) error {
 					return err
 				}
 				return b.send(tg.NewMessage(update.FromChat().ID, events.String()))
+			case "language":
+				if len(update.Message.CommandArguments()) == 0 {
+					return b.send(tg.NewMessage(update.FromChat().ID, fmt.Sprintf("Usage: /language <%s>", i18n.GetSupportedLanguages("|"))))
+				}
+				lang := update.Message.CommandArguments()
+				if lang != "pl" && lang != "en" {
+					return b.send(tg.NewMessage(update.FromChat().ID, fmt.Sprintf("Supported languages: %s", i18n.GetSupportedLanguages(", "))))
+				}
+				if err := b.s.SetUserLanguage(update.FromChat().ID, lang); err != nil {
+					return err
+				}
+				return b.send(tg.NewMessage(update.FromChat().ID, i18n.T(lang, "language_set", lang)))
 			default:
 				if w, ok := b.wizards[update.FromChat().ID][update.Message.Command()]; ok {
 					return b.send(wizard.Start(w, update))

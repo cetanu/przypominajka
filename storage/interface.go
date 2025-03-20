@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/TymekDev/przypominajka/v2/i18n"
 	"github.com/TymekDev/przypominajka/v2/models"
 )
 
@@ -15,6 +16,8 @@ type Interface interface {
 	At(chatID int64, t time.Time) (models.Events, error)
 	Add(chatID int64, e models.Event) error
 	Remove(chatID int64, e models.Event) error
+	GetUserLanguage(chatID int64) string
+	SetUserLanguage(chatID int64, lang string) error
 }
 
 func At(s Interface, chatID int64, m time.Month, d int) (models.Events, error) {
@@ -34,7 +37,8 @@ func Next(s Interface, chatID int64) (models.Events, error) {
 			return events, nil
 		}
 	}
-	return nil, errors.New("Nie ma żadnych wydarzeń")
+	lang := s.GetUserLanguage(chatID)
+	return nil, errors.New(i18n.T(lang, "no_events"))
 }
 
 func Today(s Interface, chatID int64) (models.Events, error) {

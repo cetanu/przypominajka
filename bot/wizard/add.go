@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/TymekDev/przypominajka/v2/i18n"
 	"github.com/TymekDev/przypominajka/v2/models"
 	"github.com/TymekDev/przypominajka/v2/storage"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -61,9 +62,10 @@ var _ Consume = (*Add)(nil).Next
 // likely due to a malicious client using malformed callback. For steps that
 // consume update.Message.Text we just retry the same step.
 func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume, error) {
+	lang := s.GetUserLanguage(update.FromChat().ID)
 	switch a.step {
 	case addStepStart:
-		msg := tg.NewMessage(update.FromChat().ID, "Wybierz miesiąc:")
+		msg := tg.NewMessage(update.FromChat().ID, i18n.T(lang, "choose_month"))
 		msg.ReplyMarkup = keyboardMonths(a)
 		a.step += 1
 		return msg, nil, nil
@@ -77,7 +79,7 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume
 			return nil, nil, err
 		}
 		a.e.Month = time.Month(m)
-		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, "Wybierz dzień:")
+		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, i18n.T(lang, "choose_day"))
 		msg.ReplyMarkup = keyboardDays(a, a.e.Month)
 		a.step += 1
 		return msg, nil, nil
@@ -91,7 +93,7 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume
 			return nil, nil, err
 		}
 		a.e.Day = d
-		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, "Wybierz rodzaj wydarzenia:")
+		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, i18n.T(lang, "choose_event_type"))
 		msg.ReplyMarkup = a.keyboardTypes()
 		a.step += 1
 		return msg, nil, nil
@@ -105,7 +107,7 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume
 			return nil, nil, err
 		}
 		a.e.Type = et
-		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, "Wyślij jedno imię lub dwa imiona (każde w osobnej linijce)")
+		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, i18n.T(lang, "enter_name"))
 		a.step += 1
 		return msg, a.Next, nil
 	// FIXME: this step does not run for group chats
@@ -113,17 +115,17 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume
 		lines := strings.Split(strings.TrimSpace(update.Message.Text), "\n")
 		if len(lines) != 1 && len(lines) != 2 {
 			a.step -= 1
-			return tg.NewMessage(update.FromChat().ID, "Wyślij jedno imię lub dwa imiona (każde w osobnej linijce)"), a.Next, nil
+			return tg.NewMessage(update.FromChat().ID, i18n.T(lang, "enter_name")), a.Next, nil
 		}
 		if len(lines) == 1 {
 			a.e.Name = lines[0]
 		} else {
 			a.e.Names = (*[2]string)(lines)
 		}
-		msg := tg.NewMessage(update.FromChat().ID, "Wyślij nazwisko")
+		msg := tg.NewMessage(update.FromChat().ID, i18n.T(lang, "send_surname"))
 		msg.ReplyMarkup = tg.NewInlineKeyboardMarkup(
 			tg.NewInlineKeyboardRow(
-				tg.NewInlineKeyboardButtonData("Pomiń", newCallbackData(a, addCallbackStepSurname, "skip")),
+				tg.NewInlineKeyboardButtonData(i18n.T(lang, "skip"), newCallbackData(a, addCallbackStepSurname, "skip")),
 			),
 		)
 		a.step += 1
@@ -138,7 +140,7 @@ func (a *Add) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume
 		if err := s.Add(update.FromChat().ID, a.e); err != nil {
 			return nil, nil, err
 		}
-		msg := tg.NewMessage(update.FromChat().ID, fmt.Sprintf("Gotowe! Dodałem:\n%s", a.e.Format(true)))
+		msg := tg.NewMessage(update.FromChat().ID, fmt.Sprintf(i18n.T(lang, "event_added"), a.e.Format(true)))
 		a.step += 1
 		a.done()
 		return msg, nil, nil

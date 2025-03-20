@@ -17,6 +17,7 @@ type YAML struct {
 	data      map[int64]map[time.Month]map[int]models.Events
 	chatIDs   []int64
 	chatIDMap map[int64]struct{}
+	languages map[int64]string
 }
 
 var _ Interface = (*YAML)(nil)
@@ -135,4 +136,16 @@ func (y *YAML) write() error {
 		return err
 	}
 	return os.WriteFile(y.path, b, 0o644)
+}
+
+func (y *YAML) GetUserLanguage(chatID int64) string {
+	if lang, ok := y.languages[chatID]; ok {
+		return lang
+	}
+	return "pl" // Default to Polish :)
+}
+
+func (y *YAML) SetUserLanguage(chatID int64, lang string) error {
+	y.languages[chatID] = lang
+	return y.write()
 }

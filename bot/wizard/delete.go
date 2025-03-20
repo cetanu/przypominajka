@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/TymekDev/przypominajka/v2/i18n"
 	"github.com/TymekDev/przypominajka/v2/models"
 	"github.com/TymekDev/przypominajka/v2/storage"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -56,9 +57,10 @@ func (d *Delete) start(id string, done context.CancelFunc, update tg.Update) tg.
 }
 
 func (d *Delete) Next(s storage.Interface, update tg.Update) (tg.Chattable, Consume, error) {
+	lang := s.GetUserLanguage(update.FromChat().ID)
 	switch d.step {
 	case deleteStepStart:
-		msg := tg.NewMessage(update.FromChat().ID, "Wybierz miesiąc:")
+		msg := tg.NewMessage(update.FromChat().ID, i18n.T(lang, "choose_month"))
 		msg.ReplyMarkup = keyboardMonths(d)
 		d.step += 1
 		return msg, nil, nil
@@ -72,7 +74,7 @@ func (d *Delete) Next(s storage.Interface, update tg.Update) (tg.Chattable, Cons
 			return nil, nil, err
 		}
 		d.month = time.Month(m)
-		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, "Wybierz dzień:")
+		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, i18n.T(lang, "choose_day"))
 		msg.ReplyMarkup = keyboardDays(d, d.month)
 		d.step += 1
 		return msg, nil, nil
@@ -89,10 +91,10 @@ func (d *Delete) Next(s storage.Interface, update tg.Update) (tg.Chattable, Cons
 			return nil, nil, err
 		}
 		if len(events) == 0 {
-			msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, "W wybranym dniu nie ma żadnych wydarzeń. Wpisz /delete, aby rozpocząć ponownie")
+			msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, i18n.T(lang, "no_events_on_day"))
 			return msg, nil, nil
 		}
-		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, "Wybierz wydarzenie")
+		msg := tg.NewEditMessageText(update.FromChat().ID, update.CallbackQuery.Message.MessageID, i18n.T(lang, "select_event"))
 		msg.ReplyMarkup = d.keyboardEvents(events)
 		d.step += 1
 		return msg, nil, nil
@@ -113,7 +115,7 @@ func (d *Delete) Next(s storage.Interface, update tg.Update) (tg.Chattable, Cons
 			return nil, nil, errors.New("something changed and things broke")
 		}
 		d.e = events[i]
-		msg := tg.NewEditMessageTextAndMarkup(update.FromChat().ID, update.CallbackQuery.Message.MessageID, fmt.Sprintf("Czy na pewno chcesz usunąć:\n%s?", d.e.Format(true)),
+		msg := tg.NewEditMessageTextAndMarkup(update.FromChat().ID, update.CallbackQuery.Message.MessageID, fmt.Sprintf(i18n.T(lang, "confirm_delete"), d.e.Format(true)),
 			tg.NewInlineKeyboardMarkup(
 				tg.NewInlineKeyboardRow(
 					tg.NewInlineKeyboardButtonData("Tak", newCallbackData(d, "confirm", "yes")),
@@ -127,12 +129,12 @@ func (d *Delete) Next(s storage.Interface, update tg.Update) (tg.Chattable, Cons
 		if err != nil {
 			return nil, nil, err
 		}
-		text := "Przerwano usuwanie. Wpisz /delete, aby rozpocząć ponownie"
+		text := i18n.T(lang, "delete_cancelled")
 		if value == "yes" {
 			if err := s.Remove(update.FromChat().ID, d.e); err != nil {
 				return nil, nil, err
 			}
-			text = fmt.Sprintf("Usunięto:\n%s", d.e.Format(true))
+			text = fmt.Sprintf(i18n.T(lang, "deleted"), d.e.Format(true))
 		}
 		d.step += 1
 		d.done()
